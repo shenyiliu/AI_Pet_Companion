@@ -1,3 +1,13 @@
+.idea
+.vscode
+*/__pycache__/
+__pycache__/
+./*/__pycache__/
 ASR/model/*
 
 TTS/*
+ASR/*.txt
+kernel.errors.txt
+download/
+GPT-SoVITS-Inference
+output/

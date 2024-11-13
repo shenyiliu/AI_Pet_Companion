@@ -1,0 +1,12 @@
+openvino==2024.4.0
+openvino-genai==2024.4.0
+transformers==4.38.0
+optimum[openvino]
+modelscope
+funasr
+uvicorn
+fastapi
+PyAudio
+sounddevice
+torchaudio
+screen_brightness_control

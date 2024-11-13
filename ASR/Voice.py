@@ -9,7 +9,7 @@ from scipy.io.wavfile import write
 from fastapi import FastAPI
 from funasr import AutoModel
 import threading
-import utils as u
+from utils import init_LLM, AgentLLM
 import requests
 import pyaudio
 import sys
@@ -97,7 +97,7 @@ def LLM(query:str):
     #query = "你能帮我做什么呀？"
     #query = "深圳一日游"
 
-    response = u.AgentLLM(query)
+    response = AgentLLM(query)
     return response
 
 # TTS GPT-SOVIS API
@@ -187,47 +187,43 @@ def stop_recording():
         return {"message": "No recording in progress."}
 
 
-def get_model_path(relative_path):
-    if getattr(sys, 'frozen', False):
-        base_path = os.path.dirname(sys.executable)
-    else:
-        base_path = os.path.abspath(".")
-    full_path = os.path.join(base_path, relative_path)
-    print(f"尝试加载模型路径: {full_path}")
-    if not os.path.exists(full_path):
-        raise FileNotFoundError(f"模型路径不存在: {full_path}")
-    return full_path
-
-
 # 主函数入口
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Simplified model')
-    parser.add_argument('--host', type=str, default='0.0.0.0', help='ip号')
+    parser.add_argument('--host', type=str, default='127.0.0.1', help='ip号')
     parser.add_argument('--port', type=int, default=8081, help='端口号')
     args = parser.parse_args()
-
-    model_dir = "model/SenseVoiceSmall"
-    model_vad = "model/speech_fsmn_vad_zh-cn-16k-common-pytorch"
-    model_path = "model/ov-qwen2.5-7b-instruct-INT4"
+    now_dir = os.path.dirname(os.path.abspath(__file__))
+    project_dir = os.path.dirname(now_dir)
+    download_dir = os.path.join(project_dir, "download")
+    output_dir = os.path.join(project_dir, "output")
+    def check_dir(dir1: str):
+        if not os.path.exists(dir1) or len(os.listdir(dir1)) == 0:
+            raise Exception(f"{dir1} not exists")
+    asr_model_dir = os.path.join(download_dir, "SenseVoiceSmall")
+    check_dir(asr_model_dir)
+    vad_model_dir = os.path.join(
+        download_dir, "speech_fsmn_vad_zh-cn-16k-common-pytorch"
+    )
+    check_dir(vad_model_dir)
+    qwen_ov_model_dir = os.path.join(
+        output_dir, "ov-qwen2.5-7b-instruct-int4"
+    )
+    check_dir(qwen_ov_model_dir)
 
     # 添加调试信息
     print("当前工作目录:", os.getcwd())
-    print("模型路径:", os.path.abspath(model_dir))
-    print("VAD模型路径:", os.path.abspath(model_vad))
-    print("LLM模型路径:", os.path.abspath(model_path))
-
-
+    print("ASR模型路径:", asr_model_dir)
+    print("VAD模型路径:", vad_model_dir)
+    print("LLM模型路径:", qwen_ov_model_dir)
 
     # 使用模型时
     try:
-        ASR_model_path = get_model_path(model_dir)
-        vad_model_path = get_model_path(model_vad)
-        
         print("正在加载模型...")
         model = AutoModel(
-            model=ASR_model_path,
+            model=asr_model_dir,
             model_revision="",
-            vad_model=vad_model_path,
+            vad_model=vad_model_dir,
             vad_model_revision="",
             device="cpu",
             use_offline=True,
@@ -244,6 +240,6 @@ if __name__ == '__main__':
         raise
 
     # 初始化LLM
-    u.init_LLM(get_model_path(model_path))
+    init_LLM(qwen_ov_model_dir)
     
     uvicorn.run(app, host=args.host, port=args.port, workers=1)

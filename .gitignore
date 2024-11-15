@@ -4,6 +4,7 @@
 __pycache__/
 ./*/__pycache__/
 ASR/model/*
+ASR/db/*
 
 TTS/*
 ASR/*.txt

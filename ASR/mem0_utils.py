@@ -16,7 +16,7 @@ config = {
         "config": {
             "model": "qwen2.5:7b-instruct-q4_K_M",
             "temperature": 0,
-            "max_tokens": 2048,
+            "max_tokens": 1024,
             "ollama_base_url": "http://localhost:11434",  # Ensure this URL is correct
         },
     },
@@ -33,26 +33,42 @@ config = {
 
 mem0 = Memory.from_config(config_dict=config)
 
-
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_ollama import ChatOllama
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START, MessagesState, StateGraph
 
 llm = ChatOllama(model="qwen2.5:7b-instruct-q4_K_M", 
                  streaming=True,
-                 cache=True,
-                 keep_alive=-1
+                 keep_alive=-1,
+                 temperature = 0.8,
+                 max_tokens = 1024
                  )
-
-config = {"configurable": {"thread_id": "abc234"}}
 
 # 定义提示词模板
 prompt = ChatPromptTemplate.from_messages([
     SystemMessage(content="""你是一个乐于助人的人工智能。使用提供的上下文来个性化您的响应并记住用户偏好和过去的交互。
-                  你只需从历史信息中找到和用户问题相关的信息，然后根据这些信息生成回复。"""),
-    MessagesPlaceholder(variable_name="context"),
+                  你只需从历史信息中找到和用户问题相关的信息，然后根据这些信息生成回复。不要回复无关的信息。"""),
+    MessagesPlaceholder(variable_name="messages"),
     HumanMessage(content="{input}")
 ])
+
+config = {"configurable": {"thread_id": "abc345"}}
+# 定义Graph的状态头
+workflow = StateGraph(state_schema=MessagesState)
+
+# 定义调用模型的函数
+def call_model(state: MessagesState):
+    chain = prompt | llm
+    response = chain.invoke(state["messages"])
+    return {"messages": response}
+
+workflow.add_edge(START, "model")
+workflow.add_node("model", call_model)
+
+memory = MemorySaver()
+app = workflow.compile(checkpointer=memory)
 
 
 def retrieve_context(query: str, user_id: str) -> List[Dict]:
@@ -73,17 +89,11 @@ def retrieve_context(query: str, user_id: str) -> List[Dict]:
 
 def generate_response(input: str, context: List[Dict]) -> str:
     """使用语言模型生成响应"""
-    chain = prompt | llm
 
-    response = {
-        "context": context,
-        "input": input
-    }
+    input_messages = context + [{"role": "user", "content": input}]
+    output = app.invoke({"messages": input_messages}, config)
+    context = output["messages"][-1].pretty_print()
 
-    context = ""
-    for chunk in chain.stream(response):
-        print(chunk.content,end='')
-        context += chunk.content
     return context
 
 
@@ -105,6 +115,16 @@ def save_interaction(user_id: str, user_input: str, assistant_response: str):
     # 将当前交互添加到全局变量
     all_interactions.append(interaction)
     
+        # 调试信息
+    print(f"当前交互: {interaction}")
+    print(f"全局交互列表长度: {len(all_interactions)}")
+    
+    # 模拟添加到Mem0的过程，检查是否有索引越界
+    try:
+        # 假设这里是添加到Mem0的代码
+        pass
+    except IndexError as e:
+        print(f"索引错误: {e}")
 
 
 def chat_turn(user_input: str, user_id: str) -> str:
@@ -156,7 +176,10 @@ if __name__ == "__main__":
     start_time_save = time.time()
     # 将所有的对话信息添加到记忆中
     for interaction in all_interactions:
-        mem0.add(interaction, user_id=user_id)
+        if interaction:
+            mem0.add(interaction, user_id=user_id)
+        else:
+            continue
     # 记录保存交互的结束时间
     end_time_save = time.time()
     print(f"保存交互耗时: {end_time_save - start_time_save} 秒")

@@ -1,12 +1,13 @@
 import librosa
 import uvicorn
+import time
 import os
 import re
 import argparse
 import sounddevice as sd
 import numpy as np
 from scipy.io.wavfile import write
-from fastapi import FastAPI
+from fastapi import FastAPI,Body
 from funasr import AutoModel
 import threading
 from utils import init_LLM, AgentLLM
@@ -14,6 +15,8 @@ import requests
 import pyaudio
 import sys
 import logging
+import mem0_utils as mu
+from typing import Dict
 
 # 设置日志级别，看更多细节
 logging.basicConfig(level=logging.DEBUG)
@@ -90,15 +93,14 @@ def create_Transcription(audioFile, language):
     except Exception as e:
         return ""
 
-# openVINO LLM接口
-def LLM(query:str):
-    
-    # query = "设置屏幕亮度为50"
-    #query = "你能帮我做什么呀？"
-    #query = "深圳一日游"
 
+def LLM(query:str):
+    '''openVINO LLM接口'''
     response = AgentLLM(query)
     return response
+
+    
+
 
 # TTS GPT-SOVIS API
 def TTS_stream(context:str):
@@ -162,27 +164,45 @@ def start_recording():
     else:
         return {"message": "Recording is already in progress."}
 
+
+
 # 停止录音并转录
 @app.post("/stop_recording/")
-def stop_recording():
+def stop_recording(request_data: Dict = Body(...)):
     global is_recording, recording_thread, save_transcription_messages
+
+    # 获取参数user_id
+    user_id = request_data.get("user_id", "john")
+
     if is_recording:
         is_recording = False
         recording_thread.join()  # 等待录音线程结束
         transcribe_audio(mic_output_file)  # 执行转录
         
-        # 调用LLM逻辑
-        context = LLM(save_transcription_messages)
+        # 调用openvino LLM逻辑
+        # context = LLM(save_transcription_messages)
+
+        # 检索上下文
+        context = mu.retrieve_context_with_timing(save_transcription_messages, user_id)
+
+        # 收集完整响应
+        start_time_generate = time.time()
+        # 收集完整响应
+        response = ""
+        for chunk in mu.generate_response(save_transcription_messages, context):
+            print(chunk, end="", flush=True)  # 实时打印
+            response += chunk
+        end_time_generate = time.time()
+        print(f"\nollama LLM耗时: {end_time_generate - start_time_generate} 秒")
         
-        # 检查context是否为None
-        if context is None:
-            context = "未能获取有效的转录内容。"
+        # 检查response是否为None
+        if response is None:
+            response = "未能获取有效的转录内容。"
             
         # 调用TTS
-        TTS_stream(context)
+        # TTS_stream(response)
         
-        
-        return {"message": "Recording stopped.", "transcription": context}
+        return {"message": "Recording stopped.", "transcription": response}
     else:
         return {"message": "No recording in progress."}
 
@@ -209,7 +229,8 @@ if __name__ == '__main__':
     qwen_ov_model_dir = os.path.join(
         output_dir, "ov-qwen2.5-7b-instruct-int4"
     )
-    check_dir(qwen_ov_model_dir)
+    # 先屏蔽掉openvino的加载
+    # check_dir(qwen_ov_model_dir)
 
     # 添加调试信息
     print("当前工作目录:", os.getcwd())
@@ -240,6 +261,6 @@ if __name__ == '__main__':
         raise
 
     # 初始化LLM
-    init_LLM(qwen_ov_model_dir)
+    # init_LLM(qwen_ov_model_dir)
     
     uvicorn.run(app, host=args.host, port=args.port, workers=1)

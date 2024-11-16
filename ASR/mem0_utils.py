@@ -3,6 +3,9 @@ from mem0 import Memory
 from typing import List, Dict
 import time
 
+# 存储所有的对话信息
+all_interactions = []
+
 config = {
     "vector_store": {
         "provider": "chroma",
@@ -121,11 +124,8 @@ def generate_response(input: str, context: List[Dict]):
     # return text
 
 
-# 存储所有的对话信息
-all_interactions = []
-
 def save_interaction(user_id: str, user_input: str, assistant_response: str):
-    """将交互保存到Mem0"""
+    """将历史纪录存储在all_interactions列表里面"""
     interaction = [
         {
           "role": "user",
@@ -144,16 +144,30 @@ def save_interaction(user_id: str, user_input: str, assistant_response: str):
     print(f"全局交互列表长度: {len(all_interactions)}")
     
 
+def save_to_mem0(user_id: str):
+    '''将所有的对话信息添加到mem0记忆中'''
+        # 记录保存交互的开始时间
+    start_time_save = time.time()
+    # 将所有的对话信息添加到记忆中
+    for interaction in all_interactions:
+        print(f"保存交互: {interaction}")
+        mem0.add(interaction, user_id=user_id)
+    # 记录保存交互的结束时间
+    end_time_save = time.time()
+    print(f"保存交互耗时: {end_time_save - start_time_save} 秒")
+
 
 def chat_turn(user_input: str, user_id: str) -> str:
     """创建单个对话轮次"""
-    # 记录检索上下文的开始时间
-    start_time_retrieve = time.time()
-    # 检索上下文
-    context = retrieve_context(user_input, user_id)
-    # 记录检索上下文的结束时间
-    end_time_retrieve = time.time()
-    print(f"检索上下文耗时: {end_time_retrieve - start_time_retrieve} 秒")
+    # # 记录检索上下文的开始时间
+    # start_time_retrieve = time.time()
+    # # 检索上下文
+    # context = retrieve_context(user_input, user_id)
+    # # 记录检索上下文的结束时间
+    # end_time_retrieve = time.time()
+    # print(f"检索上下文耗时: {end_time_retrieve - start_time_retrieve} 秒")
+    context = retrieve_context_with_timing(user_input, user_id)
+    
     
     # 记录产生响应的开始时间
     start_time_generate = time.time()
@@ -168,6 +182,26 @@ def chat_turn(user_input: str, user_id: str) -> str:
     save_interaction(user_id, user_input, response)
     return response
 
+import time
+from functools import wraps
+
+def timing_decorator(func_name=None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            end_time = time.time()
+            name = func_name or func.__name__
+            print(f"{name}耗时: {end_time - start_time:.4f} 秒")
+            return result
+        return wrapper
+    return decorator
+
+
+@timing_decorator("检索上下文")
+def retrieve_context_with_timing(*args, **kwargs):
+    return retrieve_context(*args, **kwargs)
 
 if __name__ == "__main__":
 
@@ -190,16 +224,9 @@ if __name__ == "__main__":
         response = chat_turn(user_input, user_id)
         #print(f"Travel Agent: {response}")
 
+    # 历史纪录存入mem0向量数据库
+    save_to_mem0(user_id)
 
-    # 记录保存交互的开始时间
-    start_time_save = time.time()
-    # 将所有的对话信息添加到记忆中
-    for interaction in all_interactions:
-        print(f"保存交互: {interaction}")
-        mem0.add(interaction, user_id=user_id)
-    # 记录保存交互的结束时间
-    end_time_save = time.time()
-    print(f"保存交互耗时: {end_time_save - start_time_save} 秒")
 
 
     '''start调试信息'''

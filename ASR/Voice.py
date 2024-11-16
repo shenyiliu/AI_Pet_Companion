@@ -17,6 +17,7 @@ import sys
 import logging
 import mem0_utils as mu
 from typing import Dict
+from concurrent.futures import ThreadPoolExecutor
 
 # 设置日志级别，看更多细节
 logging.basicConfig(level=logging.DEBUG)
@@ -35,9 +36,10 @@ is_recording = False
 
 # 添加新的全局变量
 detected_wake_word = False
-audio_buffer = []  # 用于存储检测到唤醒词后的音频
 audio_queue = []  # 用于存储待处理的音频片段
 processing_thread = None  # 新增音频处理线程
+last_speech_time = None  # 用于记录最后一次检测到语音的时间
+SILENCE_THRESHOLD = 4  # 无声检测阈值（秒）
 
 # 加载音频文件并调整采样率
 def load_audio(file_path, sample_rate=16000):
@@ -59,7 +61,7 @@ def check_wake_word(transcription: str) -> bool:
 # 录制麦克风声音
 def record_microphone():
     """修改后的录音函数"""
-    global is_recording, detected_wake_word, audio_buffer, audio_queue
+    global is_recording, detected_wake_word, audio_queue
     recording = []
 
     while is_recording:
@@ -68,10 +70,11 @@ def record_microphone():
         data = sd.rec(int(sample_rate * duration), samplerate=sample_rate, channels=1, dtype=np.float32)
         sd.wait()
         
-        if not detected_wake_word:
-            audio_queue.append(data)  # 将音频片段添加到处理队列
-        else:
-            # 检测到唤醒词后，直接保存录音
+        # 不管是否检测到唤醒词，都将音频添加到队列中
+        audio_queue.append(data)
+        
+        # 如果检测到唤醒词，同时保存到recording中
+        if detected_wake_word:
             recording.append(data)
 
     # 保存完整的录音
@@ -182,17 +185,16 @@ def TTS_stream(context:str):
 
 def process_audio():
     """处理音频的独立线程函数"""
-    global detected_wake_word, audio_queue
+    global detected_wake_word, audio_queue, last_speech_time, is_recording
     
     # 确保audio目录存在
     temp_wake_word_path = os.path.join("audio", "temp_wake_word.wav")
     os.makedirs("audio", exist_ok=True)
     
     while is_recording:
-        if len(audio_queue) > 1:
-            # 获取积累的音频片段进行处理
-            temp_audio = np.concatenate(audio_queue, axis=0)
-            audio_queue.clear()  # 清空队列
+        if len(audio_queue) > 0:  # 改为 > 0，因为我们每次都要处理
+            # 获取并处理最新的音频片段
+            temp_audio = audio_queue.pop(0)  # 只处理一个片段
             
             if not detected_wake_word:
                 write(temp_wake_word_path, sample_rate, temp_audio)
@@ -203,9 +205,32 @@ def process_audio():
                     if check_wake_word(transcription):
                         print("检测到唤醒词！准备开始记录对话...")
                         detected_wake_word = True
+                        last_speech_time = time.time()
+                        audio_queue.clear()  # 清空之前的音频
                 except Exception as e:
                     print(f"唤醒词检测出错: {e}")
-        #time.sleep(0.1)  # 短暂休眠避免CPU过度使用
+            else:
+                # 检测到唤醒词后，检查是否有语音输入
+                write(temp_wake_word_path, sample_rate, temp_audio)
+                try:
+                    transcription = create_Transcription(temp_wake_word_path, "auto")
+                    if transcription.strip():  # 如果有识别到文字
+                        print(f"检测到语音输入: {transcription}")
+                        last_speech_time = time.time()
+                    elif time.time() - last_speech_time > SILENCE_THRESHOLD:
+                        print(f"检测到{SILENCE_THRESHOLD}秒无语音输入，停止录音...")
+                        # is_recording = False
+                        break
+                except Exception as e:
+                    print(f"语音检测出错: {e}")
+        
+        time.sleep(0.1)  # 添加短暂休眠，避免CPU占用过高
+    
+    if is_recording:
+        is_recording = False
+        recording_thread.join()  # 等待录音线程结束
+        return transcribe_audio(mic_output_file)  # 返回转录结果
+
 
 # 启动录音
 @app.post("/start_recording/")
@@ -224,12 +249,24 @@ def start_recording():
         is_recording = True
         # 启动录音线程
         recording_thread = threading.Thread(target=record_microphone)
-        # 启动处理线程
-        processing_thread = threading.Thread(target=process_audio)
-        
         recording_thread.start()
-        processing_thread.start()
-        return {"message": "Recording started."}
+        
+        # 使用ThreadPoolExecutor来执行process_audio
+        result = None  # 初始化result变量
+        with ThreadPoolExecutor() as executor:
+            future = executor.submit(process_audio)
+            try:
+                # 获取process_audio的返回值
+                result = future.result()
+                print(f"处理结果: {result}")
+                # 这里可以进一步处理result，比如调用TTS等
+                # if result:
+                #     TTS_stream(result)
+            except Exception as e:
+                print(f"处理音频时出错: {e}")
+                return {"message": "Error processing audio", "error": str(e)}
+                
+        return {"message": "Recording completed", "data": result or ""}  # 确保即使result为None也返回空字符串
     else:
         return {"message": "Recording is already in progress."}
 

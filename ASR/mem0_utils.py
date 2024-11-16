@@ -98,9 +98,9 @@ def retrieve_context(query: str, user_id: str) -> List[Dict]:
     ]
     return context
 
-def generate_response(input: str, context: List[Dict]) -> str:
-    """使用语言模型生成响应"""
-    text = ' '
+def generate_response(input: str, context: List[Dict]):
+    """使用语言模型生成响应，支持流式输出"""
+    text = ''
     input_messages = context + [{"role": "user", "content": input}]
     # 非流式输出
     # output = app.invoke({"messages": input_messages}, config)
@@ -112,11 +112,13 @@ def generate_response(input: str, context: List[Dict]) -> str:
         config,
         stream_mode="messages",
     ):
-        if isinstance(chunk, AIMessage):  # 过滤以仅建模响应
-            text += chunk.content
-            # print(chunk.content, end="")    
+        if isinstance(chunk, AIMessage):
+            chunk_content = chunk.content
+            text += chunk_content
+            # 实时输出每个文本块
+            yield chunk_content
     
-    return text
+    # return text
 
 
 # 存储所有的对话信息
@@ -155,38 +157,39 @@ def chat_turn(user_input: str, user_id: str) -> str:
     
     # 记录产生响应的开始时间
     start_time_generate = time.time()
-    # 产生响应
-    response = generate_response(user_input, context)
-    # 记录产生响应的结束时间
+    # 收集完整响应
+    response = ""
+    for chunk in generate_response(user_input, context):
+        print(chunk, end="", flush=True)  # 实时打印
+        response += chunk
     end_time_generate = time.time()
-    print(f"产生响应耗时: {end_time_generate - start_time_generate} 秒")
+    print(f"\n产生响应耗时: {end_time_generate - start_time_generate} 秒")
     
-
-    # 保存交互
     save_interaction(user_id, user_input, response)
-
     return response
 
 
 if __name__ == "__main__":
 
-    print("欢迎来到您的个人旅行社计划！我如何帮助您今天的旅行计划?")
+    print("你好呀！找我有什么事呀？")
     user_id = "john"
     
+    '''start调试信息'''
     # 获取全部记忆
     response = mem0.get_all(user_id=user_id)
-
     for item in response:
         print(f"记忆：{item}")
+    '''end调试信息'''
 
     while True:
         user_input = input("You: ")
         if user_input.lower() in ['quit', 'exit', 'bye']:
-            print("旅行社代理：感谢您使用我们的旅行计划服务。旅途愉快!")
+            print("AI桌宠助手：和你对话真是太愉快了，下次再见！")
             break
         
         response = chat_turn(user_input, user_id)
-        print(f"Travel Agent: {response}")
+        #print(f"Travel Agent: {response}")
+
 
     # 记录保存交互的开始时间
     start_time_save = time.time()
@@ -199,14 +202,12 @@ if __name__ == "__main__":
     print(f"保存交互耗时: {end_time_save - start_time_save} 秒")
 
 
-
-    '''调试信息'''
+    '''start调试信息'''
         # 获取全部记忆
     response = mem0.get_all(user_id=user_id)
-
     for item in response:
         print(f"记忆：{item}")
-
+    '''end调试信息'''
 
 
 

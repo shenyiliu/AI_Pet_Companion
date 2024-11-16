@@ -2,6 +2,8 @@ import os
 from mem0 import Memory
 from typing import List, Dict
 import time
+import time
+from functools import wraps
 
 # 存储所有的对话信息
 all_interactions = []
@@ -182,10 +184,12 @@ def chat_turn(user_input: str, user_id: str) -> str:
     save_interaction(user_id, user_input, response)
     return response
 
-import time
-from functools import wraps
+
+
 
 def timing_decorator(func_name=None):
+    '''添加计时装饰器'''
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

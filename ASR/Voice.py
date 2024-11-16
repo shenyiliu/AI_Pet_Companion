@@ -33,30 +33,62 @@ save_transcription_messages = None
 recording_thread = None
 is_recording = False
 
+# 添加新的全局变量
+detected_wake_word = False
+audio_buffer = []  # 用于存储检测到唤醒词后的音频
+audio_queue = []  # 用于存储待处理的音频片段
+processing_thread = None  # 新增音频处理线程
+
 # 加载音频文件并调整采样率
 def load_audio(file_path, sample_rate=16000):
     audio, sr = librosa.load(file_path, sr=sample_rate)
     return audio
 
+# 添加一个函数来检查唤醒词
+def check_wake_word(transcription: str) -> bool:
+    """检查文本中是否包含唤醒词，支持模糊匹配"""
+    wake_words = ["胡桃胡桃", "胡桃", "胡套", "护套", "糊桃", "呼桃"]
+    transcription = transcription.lower()  # 转换为小写
+    print(f"当前识别文本: {transcription}")  # 调试信息
+    
+    for word in wake_words:
+        if word in transcription:
+            return True
+    return False
+
 # 录制麦克风声音
 def record_microphone():
-    global is_recording
+    """修改后的录音函数"""
+    global is_recording, detected_wake_word, audio_buffer, audio_queue
     recording = []
 
     while is_recording:
-        # 录制音频
-        data = sd.rec(int(sample_rate * 2), samplerate=sample_rate, channels=1, dtype=np.int16)
-        sd.wait()  # 等待录制完成
-        recording.append(data)
+        # 录制较短的音频片段（如0.5秒）提高响应速度
+        duration = 1  # 缩短单次录制时间
+        data = sd.rec(int(sample_rate * duration), samplerate=sample_rate, channels=1, dtype=np.float32)
+        sd.wait()
+        
+        if not detected_wake_word:
+            audio_queue.append(data)  # 将音频片段添加到处理队列
+        else:
+            # 检测到唤醒词后，直接保存录音
+            recording.append(data)
 
-    # 将录音合并并保存
-    audio_data = np.concatenate(recording, axis=0)
-    
-    # 如果没有audio文件夹的话就创建一个
-    os.makedirs(os.path.dirname(mic_output_file), exist_ok=True)
-    
-    write(mic_output_file, sample_rate, audio_data)
-    print(f"Microphone recording saved to {mic_output_file}")
+    # 保存完整的录音
+    if recording:
+        audio_data = np.concatenate(recording, axis=0)
+        os.makedirs(os.path.dirname(mic_output_file), exist_ok=True)
+        write(mic_output_file, sample_rate, audio_data)
+        print(f"麦克风录音保存到: {mic_output_file}")
+
+# 使用正则表达式提取第二个<|...|>中的内容
+def extract_second_tag(text):
+    '''过滤转录的情绪标签'''
+    pattern = r'<\|[^|]*\|><\|([^|]*)\|>'
+    match = re.search(pattern, text)
+    if match:
+        return match.group(1)  # 返回第一个捕获组的内容
+    return None
 
 # 转录函数
 def transcribe_audio(audio_file):
@@ -65,13 +97,20 @@ def transcribe_audio(audio_file):
         print("开始转录...")
         # 转录的结果
         response = create_Transcription(audio_file, "auto")
-        response = re.sub(r"<[^>]*>", "", response)
+        print(f"response:{response}")
+
+        emotion ="情绪：" + extract_second_tag(response)
+        print(emotion)  # 输出: ANGRY    
+
+        response =re.sub(r"<[^>]*>", "", response) 
 
         print("Transcription result:", response)
 
         if not save_transcription_messages:
             save_transcription_messages = ''
         save_transcription_messages += response
+
+        return response
     except Exception as e:
         print("Transcription failed:", e)
 
@@ -98,9 +137,6 @@ def LLM(query:str):
     '''openVINO LLM接口'''
     response = AgentLLM(query)
     return response
-
-    
-
 
 # TTS GPT-SOVIS API
 def TTS_stream(context:str):
@@ -144,13 +180,41 @@ def TTS_stream(context:str):
         # 终止pyaudio
         p.terminate()
 
+def process_audio():
+    """处理音频的独立线程函数"""
+    global detected_wake_word, audio_queue
+    
+    # 确保audio目录存在
+    temp_wake_word_path = os.path.join("audio", "temp_wake_word.wav")
+    os.makedirs("audio", exist_ok=True)
+    
+    while is_recording:
+        if len(audio_queue) > 1:
+            # 获取积累的音频片段进行处理
+            temp_audio = np.concatenate(audio_queue, axis=0)
+            audio_queue.clear()  # 清空队列
+            
+            if not detected_wake_word:
+                write(temp_wake_word_path, sample_rate, temp_audio)
+                try:
+                    transcription = create_Transcription(temp_wake_word_path, "auto")
+                    print(f"唤醒词检测中... 当前音频长度: {len(temp_audio)/sample_rate}秒")
+                    
+                    if check_wake_word(transcription):
+                        print("检测到唤醒词！准备开始记录对话...")
+                        detected_wake_word = True
+                except Exception as e:
+                    print(f"唤醒词检测出错: {e}")
+        #time.sleep(0.1)  # 短暂休眠避免CPU过度使用
 
 # 启动录音
 @app.post("/start_recording/")
 def start_recording():
-    global is_recording, recording_thread,save_transcription_messages
+    global is_recording, recording_thread, processing_thread, save_transcription_messages, detected_wake_word, audio_queue
     
     save_transcription_messages = ''
+    detected_wake_word = False
+    audio_queue = []  # 重置音频队列
 
     # 判断mic_output_file文件是否存在，如果存在则删除
     if os.path.exists(mic_output_file):
@@ -158,8 +222,13 @@ def start_recording():
 
     if not is_recording:
         is_recording = True
+        # 启动录音线程
         recording_thread = threading.Thread(target=record_microphone)
+        # 启动处理线程
+        processing_thread = threading.Thread(target=process_audio)
+        
         recording_thread.start()
+        processing_thread.start()
         return {"message": "Recording started."}
     else:
         return {"message": "Recording is already in progress."}
@@ -177,23 +246,23 @@ def stop_recording(request_data: Dict = Body(...)):
     if is_recording:
         is_recording = False
         recording_thread.join()  # 等待录音线程结束
-        transcribe_audio(mic_output_file)  # 执行转录
-        
+        response = transcribe_audio(mic_output_file)  # 执行转录
+
         # 调用openvino LLM逻辑
         # context = LLM(save_transcription_messages)
 
         # 检索上下文
-        context = mu.retrieve_context_with_timing(save_transcription_messages, user_id)
+        # context = mu.retrieve_context_with_timing(save_transcription_messages, user_id)
 
-        # 收集完整响应
-        start_time_generate = time.time()
-        # 收集完整响应
-        response = ""
-        for chunk in mu.generate_response(save_transcription_messages, context):
-            print(chunk, end="", flush=True)  # 实时打印
-            response += chunk
-        end_time_generate = time.time()
-        print(f"\nollama LLM耗时: {end_time_generate - start_time_generate} 秒")
+        # # 收集完整响应
+        # start_time_generate = time.time()
+        # # 收集完整响应
+        
+        # for chunk in mu.generate_response(save_transcription_messages, context):
+        #     print(chunk, end="", flush=True)  # 实时打印
+        #     response += chunk
+        # end_time_generate = time.time()
+        # print(f"\nollama LLM耗时: {end_time_generate - start_time_generate} 秒")
         
         # 检查response是否为None
         if response is None:

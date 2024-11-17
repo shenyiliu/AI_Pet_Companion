@@ -39,7 +39,7 @@ detected_wake_word = False
 audio_queue = []  # 用于存储待处理的音频片段
 processing_thread = None  # 新增音频处理线程
 last_speech_time = None  # 用于记录最后一次检测到语音的时间
-SILENCE_THRESHOLD = 4  # 无声检测阈值（秒）
+SILENCE_THRESHOLD = 2  # 无声检测阈值（秒）
 MAX_IDLE_TIME = 60  # 最大空闲时间（秒）
 
 # 加载音频文件并调整采样率
@@ -50,7 +50,7 @@ def load_audio(file_path, sample_rate=16000):
 # 添加一个函数来检查唤醒词
 def check_wake_word(transcription: str) -> bool:
     """检查文本中是否包含唤醒词，支持模糊匹配"""
-    wake_words = ["胡桃胡桃", "胡桃", "胡套", "护套", "糊桃", "呼桃"]
+    wake_words = ["胡桃胡桃", "胡桃", "胡套", "护套", "糊桃", "呼桃","胡涛"]
     transcription = transcription.lower()  # 转换为小写
     print(f"当前识别文本: {transcription}")  # 调试信息
     
@@ -67,7 +67,7 @@ def record_microphone():
 
     while is_recording:
         # 录制较短的音频片段（如0.5秒）提高响应速度
-        duration = 1  # 缩短单次录制时间
+        duration = 1.5  # 缩短单次录制时间
         data = sd.rec(int(sample_rate * duration), samplerate=sample_rate, channels=1, dtype=np.float32)
         sd.wait()
         

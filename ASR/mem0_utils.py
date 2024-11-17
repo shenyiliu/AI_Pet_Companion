@@ -45,12 +45,20 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, MessagesState, StateGraph
 # from langchain_core.messages import SystemMessage, trim_messages
 
-llm = ChatOllama(model="qwen2.5:7b-instruct-q4_K_M", 
-                 streaming=True,
-                 keep_alive=-1,
-                 temperature = 0.8,
-                 max_tokens = 1024
-                 )
+# 在 mem0_utils.py 文件顶部定义全局变量
+_llm_instance = None
+
+def get_llm_instance():
+    global _llm_instance
+    if _llm_instance is None:
+        _llm_instance = ChatOllama(
+            model="qwen2.5:7b-instruct-q4_K_M",
+            streaming=True,
+            keep_alive=-1,  # 设置更长的保活时间（毫秒）
+            temperature=0.8,
+            max_tokens=1024
+        )
+    return _llm_instance
 
 # trimmer = trim_messages(
 #     max_tokens=65,
@@ -75,7 +83,7 @@ workflow = StateGraph(state_schema=MessagesState)
 
 # 定义调用模型的函数
 def call_model(state: MessagesState):
-    chain = prompt | llm
+    chain = prompt | get_llm_instance()
     # trimmed_messages = trimmer.invoke(state["messages"])
     response = chain.invoke(state["messages"])
     return {"messages": response}

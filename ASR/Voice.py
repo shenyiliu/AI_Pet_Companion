@@ -42,6 +42,9 @@ last_speech_time = None  # 用于记录最后一次检测到语音的时间
 SILENCE_THRESHOLD = 2  # 无声检测阈值（秒）
 MAX_IDLE_TIME = 60  # 最大空闲时间（秒）
 
+# 添加TTS播放状态标识
+tts_playing = False
+
 # 加载音频文件并调整采样率
 def load_audio(file_path, sample_rate=16000):
     audio, sr = librosa.load(file_path, sr=sample_rate)
@@ -62,11 +65,15 @@ def check_wake_word(transcription: str) -> bool:
 # 录制麦克风声音
 def record_microphone():
     """修改后的录音函数"""
-    global is_recording, detected_wake_word, audio_queue
+    global is_recording, detected_wake_word, audio_queue, tts_playing
     recording = []
 
     while is_recording:
-        # 录制较短的音频片段（如0.5秒）提高响应速度
+        if tts_playing:
+            time.sleep(0.1)
+            continue  # 跳过录音处理
+
+        # 录制较短的音频片段（如1.5秒）提高响应速度
         duration = 1.5  # 缩短单次录制时间
         data = sd.rec(int(sample_rate * duration), samplerate=sample_rate, channels=1, dtype=np.float32)
         sd.wait()
@@ -101,7 +108,7 @@ def transcribe_audio(audio_file):
         print("开始转录...")
         # 转录的结果
         response = create_Transcription(audio_file, "auto")
-        print(f"response:{response}")
+        #print(f"response:{response}")
 
         emotion ="情绪：" + extract_second_tag(response)
         print(emotion)  # 输出: ANGRY    
@@ -114,7 +121,7 @@ def transcribe_audio(audio_file):
             save_transcription_messages = ''
         save_transcription_messages += response
 
-        return response
+        return emotion +","+ response
     except Exception as e:
         print("Transcription failed:", e)
 
@@ -143,9 +150,10 @@ def LLM(query:str):
     return response
 
 # TTS GPT-SOVIS API
-def TTS_stream(context:str):
-	# 流式传输音频的URL，你可以自由改成Post
-	#stream_url = 'http://127.0.0.1:5000/tts?text=这是一段测试文本，旨在通过多种语言风格和复杂性的内容来全面检验文本到语音系统的性能。接下来，我们会探索各种主题和语言结构，包括文学引用、技术性描述、日常会话以及诗歌等。首先，让我们从一段简单的描述性文本开始：“在一个阳光明媚的下午，一位年轻的旅者站在山顶上，眺望着下方那宽广而繁忙的城市。他的心中充满了对未来的憧憬和对旅途的期待。”这段文本测试了系统对自然景观描写的处理能力和情感表达的细腻程度。&stream=true'
+def TTS_stream(context: str):
+    global tts_playing
+    tts_playing = True  # 开始播放TTS
+
     # 流式传输音频的URL
     stream_url = f'http://127.0.0.1:5000/tts?text={context}&stream=true'
 
@@ -183,6 +191,7 @@ def TTS_stream(context:str):
 
         # 终止pyaudio
         p.terminate()
+        tts_playing = False  # 播放结束
 
 def process_audio():
     """处理音频的独立线程函数"""
@@ -210,7 +219,7 @@ def process_audio():
                 # 唤醒词检测逻辑保持不变
                 write(temp_wake_word_path, sample_rate, temp_audio)
                 try:
-                    transcription = create_Transcription(temp_wake_word_path, "auto")
+                    transcription = create_Transcription(temp_wake_word_path, "zh")
                     print(f"唤醒词检测中... 当前音频长度: {len(temp_audio)/sample_rate}秒")
                     
                     if check_wake_word(transcription):
@@ -224,31 +233,31 @@ def process_audio():
                 # 检测到唤醒词后的对话处理
                 write(temp_wake_word_path, sample_rate, temp_audio)
                 try:
-                    transcription = create_Transcription(temp_wake_word_path, "auto")
+                    transcription = create_Transcription(temp_wake_word_path, "zh")
                     if transcription.strip():  # 如果有识别到文字
                         print(f"检测到语音输入: {transcription}")
                         last_speech_time = time.time()
                         conversation_buffer.append(temp_audio)
                     elif time.time() - last_speech_time > SILENCE_THRESHOLD:
                         # 检测到静音，处理当前对话
-                        if conversation_buffer:
-                            # 保存并转录当前对话
+                        if conversation_buffer and len(conversation_buffer) > 0:  # 确保有实际的对话内容
                             audio_data = np.concatenate(conversation_buffer, axis=0)
                             temp_conversation_path = os.path.join("audio", f"conversation_{len(all_transcriptions)}.wav")
                             write(temp_conversation_path, sample_rate, audio_data)
                             
                             # 转录当前对话
                             current_transcription = transcribe_audio(temp_conversation_path)
-                            if current_transcription:
+                            if current_transcription and current_transcription.strip():  # 确保转录结果不为空
                                 all_transcriptions.append(current_transcription)
                                 print(f"当前对话转录完成: {current_transcription}")
-                            
+
+                                # 这里可以添加对话处理逻辑，比如调用 LLM 或 TTS
+                                # 调用Mem0_LLM_TTS
+                                Mem0_LLM_TTS(current_transcription,"john")
+
                             # 清空当前对话缓冲区，准备下一轮对话
                             conversation_buffer = []
                             last_speech_time = time.time()
-                            
-                            # 这里可以添加对话处理逻辑，比如调用 LLM 或 TTS
-                            # process_conversation(current_transcription)
                             
                 except Exception as e:
                     print(f"对话处理出错: {e}")
@@ -257,6 +266,37 @@ def process_audio():
     
     # 返回所有对话的转录结果
     return all_transcriptions
+
+
+def Mem0_LLM_TTS(current_transcription:str,user_id:str):
+        '''
+        1.检索上下文
+        2.生成LLM响应
+        3.调用TTS
+        '''
+
+        # 调用openvino LLM逻辑
+        # context = LLM(save_transcription_messages)
+
+        # 检索上下文
+        context = mu.retrieve_context_with_timing(current_transcription, user_id)
+
+        # 收集完整响应
+        start_time_generate = time.time()
+        # 收集完整响应
+        response = ""
+        for chunk in mu.generate_response(current_transcription, context):
+            print(chunk, end="", flush=True)  # 实时打印
+            response += chunk
+        end_time_generate = time.time()
+        print(f"\nollama LLM耗时: {end_time_generate - start_time_generate} 秒")
+        
+        # 检查response是否为None
+        if response is None:
+            response = "未能获取有效的转录内容。"
+            
+        # 调用TTS
+        TTS_stream(response)
 
 
 # 启动录音
@@ -312,7 +352,7 @@ def stop_recording(request_data: Dict = Body(...)):
     if is_recording:
         is_recording = False
         recording_thread.join()  # 等待录音线程结束
-        response = transcribe_audio(mic_output_file)  # 执行转录
+        # response = transcribe_audio(mic_output_file)  # 执行转录
 
         # 调用openvino LLM逻辑
         # context = LLM(save_transcription_messages)

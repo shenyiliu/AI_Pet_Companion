@@ -10,3 +10,9 @@ PyAudio
 sounddevice
 torchaudio
 screen_brightness_control
+mem0ai
+langchain-community
+rank-bm25
+chromadb
+langchain-ollama
+langgraph

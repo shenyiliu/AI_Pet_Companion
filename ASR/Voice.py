@@ -40,6 +40,7 @@ audio_queue = []  # 用于存储待处理的音频片段
 processing_thread = None  # 新增音频处理线程
 last_speech_time = None  # 用于记录最后一次检测到语音的时间
 SILENCE_THRESHOLD = 4  # 无声检测阈值（秒）
+MAX_IDLE_TIME = 60  # 最大空闲时间（秒）
 
 # 加载音频文件并调整采样率
 def load_audio(file_path, sample_rate=16000):
@@ -191,45 +192,71 @@ def process_audio():
     temp_wake_word_path = os.path.join("audio", "temp_wake_word.wav")
     os.makedirs("audio", exist_ok=True)
     
+    conversation_buffer = []  # 用于存储当前对话的音频数据
+    all_transcriptions = []  # 存储所有对话的转录结果
+    
     while is_recording:
-        if len(audio_queue) > 0:  # 改为 > 0，因为我们每次都要处理
-            # 获取并处理最新的音频片段
-            temp_audio = audio_queue.pop(0)  # 只处理一个片段
+        if len(audio_queue) > 0:
+            temp_audio = audio_queue.pop(0)
+            
+            # 检查是否需要重置唤醒状态
+            if detected_wake_word and last_speech_time and time.time() - last_speech_time > MAX_IDLE_TIME:
+                print("超过1分钟没有对话，需要重新唤醒")
+                detected_wake_word = False
+                conversation_buffer = []
+                last_speech_time = None
             
             if not detected_wake_word:
+                # 唤醒词检测逻辑保持不变
                 write(temp_wake_word_path, sample_rate, temp_audio)
                 try:
                     transcription = create_Transcription(temp_wake_word_path, "auto")
                     print(f"唤醒词检测中... 当前音频长度: {len(temp_audio)/sample_rate}秒")
                     
                     if check_wake_word(transcription):
-                        print("检测到唤醒词！准备开始记录对话...")
+                        print("检测到唤醒词！准备开始对话...")
                         detected_wake_word = True
                         last_speech_time = time.time()
                         audio_queue.clear()  # 清空之前的音频
                 except Exception as e:
                     print(f"唤醒词检测出错: {e}")
             else:
-                # 检测到唤醒词后，检查是否有语音输入
+                # 检测到唤醒词后的对话处理
                 write(temp_wake_word_path, sample_rate, temp_audio)
                 try:
                     transcription = create_Transcription(temp_wake_word_path, "auto")
                     if transcription.strip():  # 如果有识别到文字
                         print(f"检测到语音输入: {transcription}")
                         last_speech_time = time.time()
+                        conversation_buffer.append(temp_audio)
                     elif time.time() - last_speech_time > SILENCE_THRESHOLD:
-                        print(f"检测到{SILENCE_THRESHOLD}秒无语音输入，停止录音...")
-                        # is_recording = False
-                        break
+                        # 检测到静音，处理当前对话
+                        if conversation_buffer:
+                            # 保存并转录当前对话
+                            audio_data = np.concatenate(conversation_buffer, axis=0)
+                            temp_conversation_path = os.path.join("audio", f"conversation_{len(all_transcriptions)}.wav")
+                            write(temp_conversation_path, sample_rate, audio_data)
+                            
+                            # 转录当前对话
+                            current_transcription = transcribe_audio(temp_conversation_path)
+                            if current_transcription:
+                                all_transcriptions.append(current_transcription)
+                                print(f"当前对话转录完成: {current_transcription}")
+                            
+                            # 清空当前对话缓冲区，准备下一轮对话
+                            conversation_buffer = []
+                            last_speech_time = time.time()
+                            
+                            # 这里可以添加对话处理逻辑，比如调用 LLM 或 TTS
+                            # process_conversation(current_transcription)
+                            
                 except Exception as e:
-                    print(f"语音检测出错: {e}")
+                    print(f"对话处理出错: {e}")
         
-        time.sleep(0.1)  # 添加短暂休眠，避免CPU占用过高
+        time.sleep(0.1)
     
-    if is_recording:
-        is_recording = False
-        recording_thread.join()  # 等待录音线程结束
-        return transcribe_audio(mic_output_file)  # 返回转录结果
+    # 返回所有对话的转录结果
+    return all_transcriptions
 
 
 # 启动录音
@@ -241,7 +268,6 @@ def start_recording():
     detected_wake_word = False
     audio_queue = []  # 重置音频队列
 
-    # 判断mic_output_file文件是否存在，如果存在则删除
     if os.path.exists(mic_output_file):
         os.remove(mic_output_file)
 
@@ -256,17 +282,20 @@ def start_recording():
         with ThreadPoolExecutor() as executor:
             future = executor.submit(process_audio)
             try:
-                # 获取process_audio的返回值
-                result = future.result()
-                print(f"处理结果: {result}")
-                # 这里可以进一步处理result，比如调用TTS等
-                # if result:
-                #     TTS_stream(result)
+                # 获取所有对话的转录结果
+                conversations = future.result()
+                print(f"对话记录: {conversations}")
+                
+                # 这里可以添加对所有对话的后处理逻辑
+                # process_all_conversations(conversations)
+                
+                return {
+                    "message": "Recording completed",
+                    "conversations": conversations or []
+                }
             except Exception as e:
                 print(f"处理音频时出错: {e}")
                 return {"message": "Error processing audio", "error": str(e)}
-                
-        return {"message": "Recording completed", "data": result or ""}  # 确保即使result为None也返回空字符串
     else:
         return {"message": "Recording is already in progress."}
 

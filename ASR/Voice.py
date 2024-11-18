@@ -18,6 +18,8 @@ import logging
 import mem0_utils as mu
 from typing import Dict
 from concurrent.futures import ThreadPoolExecutor
+from queue import Queue, Empty
+from collections import deque
 
 # 设置日志级别，看更多细节
 logging.basicConfig(level=logging.DEBUG)
@@ -44,6 +46,11 @@ MAX_IDLE_TIME = 60  # 最大空闲时间（秒）
 
 # 添加TTS播放状态标识
 tts_playing = False
+
+# 添加全局队列
+tts_queue = Queue()
+tts_thread = None
+is_tts_running = False
 
 # 加载音频文件并调整采样率
 def load_audio(file_path, sample_rate=16000):
@@ -268,36 +275,66 @@ def process_audio():
     return all_transcriptions
 
 
-def Mem0_LLM_TTS(current_transcription:str,user_id:str):
-        '''
-        1.检索上下文
-        2.生成LLM响应
-        3.调用TTS
-        '''
-
-        # 调用openvino LLM逻辑
-        # context = LLM(save_transcription_messages)
-
-        # 检索上下文
-        context = mu.retrieve_context_with_timing(current_transcription, user_id)
-
-        # 收集完整响应
-        start_time_generate = time.time()
-        # 收集完整响应
-        response = ""
-        for chunk in mu.generate_response(current_transcription, context):
-            print(chunk, end="", flush=True)  # 实时打印
-            response += chunk
-        end_time_generate = time.time()
-        print(f"\nollama LLM耗时: {end_time_generate - start_time_generate} 秒")
+def Mem0_LLM_TTS(current_transcription:str, user_id:str):
+    '''
+    1.检索上下文
+    2.生成LLM响应并流式传输到TTS
+    3.调用TTS
+    '''
+    global is_tts_running, tts_thread, tts_queue
+    
+    # 检索上下文
+    context = mu.retrieve_context_with_timing(current_transcription, user_id)
+    
+    # 启动TTS处理线程
+    if tts_thread is None or not tts_thread.is_alive():
+        is_tts_running = True
+        tts_thread = threading.Thread(target=process_tts_queue)
+        tts_thread.start()
+    
+    # 用于临时存储当前正在构建的句子
+    current_sentence = ""
+    
+    # 收集完整响应
+    start_time_generate = time.time()
+    
+    for chunk in mu.generate_response(current_transcription, context):
+        print(chunk, end="", flush=True)  # 实时打印
         
-        # 检查response是否为None
-        if response is None:
-            response = "未能获取有效的转录内容。"
-            
-        # 调用TTS
-        TTS_stream(response)
+        current_sentence += chunk
+        
+        # 检查是否有完整的句子
+        if any(punct in chunk for punct in ['。', '！', '？', '.', '!', '?']):
+            # 将当前句子加入TTS队列
+            if current_sentence.strip():
+                tts_queue.put(current_sentence.strip())
+            current_sentence = ""
+    
+    # 处理最后可能剩余的不完整句子
+    if current_sentence.strip():
+        tts_queue.put(current_sentence.strip())
+    
+    end_time_generate = time.time()
+    print(f"\nollama LLM耗时: {end_time_generate - start_time_generate} 秒")
 
+def process_tts_queue():
+    """处理TTS队列的线程函数"""
+    global is_tts_running, tts_playing
+    
+    while is_tts_running:
+        try:
+            # 从队列中获取文本，如果队列为空会等待
+            text = tts_queue.get(timeout=1)
+            if text:
+                # 执行TTS
+                TTS_stream(text)
+                # 标记任务完成
+                tts_queue.task_done()
+        except Empty:
+            continue
+        except Exception as e:
+            print(f"TTS处理错误: {e}")
+            continue
 
 # 启动录音
 @app.post("/start_recording/")
@@ -344,7 +381,7 @@ def start_recording():
 # 停止录音并转录
 @app.post("/stop_recording/")
 def stop_recording(request_data: Dict = Body(...)):
-    global is_recording, recording_thread, save_transcription_messages
+    global is_recording, recording_thread, is_tts_running, tts_thread
 
     # 获取参数user_id
     user_id = request_data.get("user_id", "john")
@@ -352,32 +389,13 @@ def stop_recording(request_data: Dict = Body(...)):
     if is_recording:
         is_recording = False
         recording_thread.join()  # 等待录音线程结束
-        # response = transcribe_audio(mic_output_file)  # 执行转录
-
-        # 调用openvino LLM逻辑
-        # context = LLM(save_transcription_messages)
-
-        # 检索上下文
-        # context = mu.retrieve_context_with_timing(save_transcription_messages, user_id)
-
-        # # 收集完整响应
-        # start_time_generate = time.time()
-        # # 收集完整响应
         
-        # for chunk in mu.generate_response(save_transcription_messages, context):
-        #     print(chunk, end="", flush=True)  # 实时打印
-        #     response += chunk
-        # end_time_generate = time.time()
-        # print(f"\nollama LLM耗时: {end_time_generate - start_time_generate} 秒")
-        
-        # 检查response是否为None
-        if response is None:
-            response = "未能获取有效的转录内容。"
+        # 停止TTS处理线程
+        if tts_thread and tts_thread.is_alive():
+            is_tts_running = False
+            tts_thread.join()
             
-        # 调用TTS
-        # TTS_stream(response)
-        
-        return {"message": "Recording stopped.", "transcription": response}
+        return {"message": "Recording stopped."}
     else:
         return {"message": "No recording in progress."}
 

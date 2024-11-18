@@ -150,12 +150,12 @@ documents = [
     document_10,
     document_11
 ]
-start_time = time.time()
-uuids = [str(uuid4()) for _ in range(len(documents))]
+# start_time = time.time()
+# uuids = [str(uuid4()) for _ in range(len(documents))]
 
-vector_store.add_documents(documents=documents, ids=uuids)
-end_time = time.time()
-print(f"添加文档执行时间: {end_time - start_time:.4f} 秒")
+vector_store.add_documents(documents=[document_11], ids=str(uuid4()))
+# end_time = time.time()
+# print(f"添加文档执行时间: {end_time - start_time:.4f} 秒")
 
 # 根据问题查询相关数据
 start_time = time.time()
@@ -163,7 +163,8 @@ results = vector_store.similarity_search_with_score(
     "LangGraph?", k=5, filter={"source": "news"}
 )
 for res, score in results:
-    print(f"* [SIM={score:3f}] {res.page_content} [{res.metadata}]")
+    #print(f"* [SIM={score:3f}] {res.page_content} [{res.metadata}]")
+    print(res.page_content)
 end_time = time.time()
 print(f"执行时间: {end_time - start_time:.4f} 秒")
 

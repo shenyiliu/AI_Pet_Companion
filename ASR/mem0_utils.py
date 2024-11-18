@@ -45,6 +45,11 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, MessagesState, StateGraph
 # from langchain_core.messages import SystemMessage, trim_messages
 
+from langchain_ollama import OllamaEmbeddings
+from langchain_chroma import Chroma
+from uuid import uuid4
+from langchain_core.documents import Document
+
 # 在 mem0_utils.py 文件顶部定义全局变量
 _llm_instance = None
 
@@ -95,10 +100,31 @@ memory = MemorySaver()
 app = workflow.compile(checkpointer=memory)
 
 
+# 向量数据库
+embeddings  = OllamaEmbeddings(
+    model="nomic-embed-text:latest"
+)
+
+vector_store = Chroma(
+    collection_name="test",
+    embedding_function=embeddings,
+    persist_directory="./db",  # Where to save data locally, remove if not necessary
+)
+
+
 def retrieve_context(query: str, user_id: str) -> List[Dict]:
-    """从Mem0检索相关上下文"""
-    memories = mem0.search(query, user_id=user_id)
-    seralized_memories = ' '.join([mem["memory"] for mem in memories])
+    """从langchain-chroma检索相关上下文"""
+    # memories = mem0.search(query, user_id=user_id)
+
+    memories = vector_store.similarity_search_with_score(
+        query, k=5, filter={"source": "news"}
+    )
+
+    seralized_memories = ''
+    for res, score in memories:
+        print(f"检索出来的相关文本:{res.page_content}")
+        seralized_memories = ' '.join([res.page_content])
+
     context = [
         {
             "role": "system", 
@@ -135,33 +161,23 @@ def generate_response(input: str, context: List[Dict]):
 
 
 def save_interaction(user_id: str, user_input: str, assistant_response: str):
-    """将历史纪录存储在all_interactions列表里面"""
-    interaction = [
-        {
-          "role": "user",
-          "content": user_input
-        },
-        {
-            "role": "assistant",
-            "content": assistant_response
-        }
-    ]
-    # 将当前交互添加到全局变量
-    all_interactions.append(interaction)
-    
-        # 调试信息
-    print(f"当前输入: {user_input}")
-    print(f"全局交互列表长度: {len(all_interactions)}")
+    """将对话信息存储到向量数据库中"""
+    start_time_save = time.time()
+
+    document = Document(
+        page_content = user_input,
+        metadata={"source": "news"}
+    )
+    # 将所有的对话信息添加到记忆中
+    vector_store.add_documents(documents=[document], ids=str(uuid4()))
+
+    # 记录保存交互的结束时间
+    end_time_save = time.time()
+    print(f"保存交互耗时: {end_time_save - start_time_save} 秒")
     
 
-def save_to_mem0(user_id: str):
-    '''将所有的对话信息添加到mem0记忆中'''
-        # 记录保存交互的开始时间
-    start_time_save = time.time()
-    # 将所有的对话信息添加到记忆中
-    for interaction in all_interactions:
-        print(f"保存交互: {interaction}")
-        mem0.add(interaction, user_id=user_id)
+
+
     # 记录保存交互的结束时间
     end_time_save = time.time()
     print(f"保存交互耗时: {end_time_save - start_time_save} 秒")
@@ -220,12 +236,6 @@ if __name__ == "__main__":
     print("你好呀！找我有什么事呀？")
     user_id = "john"
     
-    '''start调试信息'''
-    # 获取全部记忆
-    response = mem0.get_all(user_id=user_id)
-    for item in response:
-        print(f"记忆：{item}")
-    '''end调试信息'''
 
     while True:
         user_input = input("You: ")
@@ -236,35 +246,4 @@ if __name__ == "__main__":
         response = chat_turn(user_input, user_id)
         #print(f"Travel Agent: {response}")
 
-    # 历史纪录存入mem0向量数据库
-    save_to_mem0(user_id)
 
-    '''start调试信息'''
-        # 获取全部记忆
-    response = mem0.get_all(user_id=user_id)
-    for item in response:
-        print(f"记忆：{item}")
-    '''end调试信息'''
-
-
-
-# # Initialize Memory with the configuration
-# m = Memory.from_config(config_dict=config)
-# app_id = "app-1"
-# # 添加记忆
-# response = m.add("我喜欢车", user_id="alice",metadata={"app_id": app_id})
-# #print(response)
-# # 添加记忆
-# response = m.add("我爱冉冉宝贝", user_id="alice",metadata={"app_id": app_id})
-# #print(response)
-# # 查询相关记忆
-# response = m.search(query="我喜欢谁呀？", user_id="alice")
-# print(response)
-
-# print("================")
-
-# # 获取全部记忆
-# # response = m.get_all(user_id="alice")
-
-# # for item in response:
-# #     print(item)

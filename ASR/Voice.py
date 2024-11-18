@@ -285,6 +285,9 @@ def Mem0_LLM_TTS(current_transcription:str, user_id:str):
     
     # 检索上下文
     context = mu.retrieve_context_with_timing(current_transcription, user_id)
+
+    # 保存当前对话信息
+    mu.save_interaction_timing(user_id, current_transcription, "")
     
     # 启动TTS处理线程
     if tts_thread is None or not tts_thread.is_alive():
@@ -378,13 +381,16 @@ def start_recording():
 
 
 
-# 停止录音并转录
+# 停止录音
 @app.post("/stop_recording/")
 def stop_recording(request_data: Dict = Body(...)):
     global is_recording, recording_thread, is_tts_running, tts_thread
 
     # 获取参数user_id
     user_id = request_data.get("user_id", "john")
+
+    # 保存所有的对话信息到向量数据库中
+    mu.save_interaction_to_vector_store_timing()
 
     if is_recording:
         is_recording = False

@@ -111,6 +111,21 @@ vector_store = Chroma(
     persist_directory="./db",  # Where to save data locally, remove if not necessary
 )
 
+def timing_decorator(func_name=None):
+    '''添加计时装饰器'''
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            end_time = time.time()
+            name = func_name or func.__name__
+            print(f"{name}耗时: {end_time - start_time:.4f} 秒")
+            return result
+        return wrapper
+    return decorator
+
 
 def retrieve_context(query: str, user_id: str) -> List[Dict]:
     """从langchain-chroma检索相关上下文"""
@@ -122,7 +137,7 @@ def retrieve_context(query: str, user_id: str) -> List[Dict]:
 
     seralized_memories = ''
     for res, score in memories:
-        print(f"检索出来的相关文本:{res.page_content}")
+        print(f"相关文本:{res.page_content}")
         seralized_memories = ' '.join([res.page_content])
 
     context = [
@@ -159,28 +174,38 @@ def generate_response(input: str, context: List[Dict]):
     
     # return text
 
+@timing_decorator("将对话信息存储到documents中")
+def save_interaction_timing(*args, **kwargs):
+    return save_interaction(*args, **kwargs)
 
+documents = []
 def save_interaction(user_id: str, user_input: str, assistant_response: str):
-    """将对话信息存储到向量数据库中"""
-    start_time_save = time.time()
-
-    document = Document(
+    """将对话信息存储到documents中"""
+    document_item = Document(
         page_content = user_input,
         metadata={"source": "news"}
     )
-    # 将所有的对话信息添加到记忆中
-    vector_store.add_documents(documents=[document], ids=str(uuid4()))
-
-    # 记录保存交互的结束时间
-    end_time_save = time.time()
-    print(f"保存交互耗时: {end_time_save - start_time_save} 秒")
-    
+    print(f"存储到documents中: {document_item}")
+    documents.append(document_item)
 
 
+@timing_decorator("将所有的对话信息保存到向量数据库中")
+def save_interaction_to_vector_store_timing(*args, **kwargs):
+    return save_interaction_to_vector_store(*args, **kwargs)
 
-    # 记录保存交互的结束时间
-    end_time_save = time.time()
-    print(f"保存交互耗时: {end_time_save - start_time_save} 秒")
+def save_interaction_to_vector_store():
+    '''将所有的对话信息保存到向量数据库中'''
+    global documents
+
+    for document in documents:
+        print(f"保存到向量数据库中的对话信息: {document}")
+
+
+    if documents:  # 只有当documents不为空时才保存
+        vector_store.add_documents(documents=documents, ids=str(uuid4()))
+        documents.clear()
+    else:
+        print("没有新的对话需要保存")
 
 
 def chat_turn(user_input: str, user_id: str) -> str:
@@ -205,26 +230,9 @@ def chat_turn(user_input: str, user_id: str) -> str:
     end_time_generate = time.time()
     print(f"\n产生响应耗时: {end_time_generate - start_time_generate} 秒")
     
-    save_interaction(user_id, user_input, response)
+    save_interaction_timing(user_id, user_input, response)
     return response
 
-
-
-
-def timing_decorator(func_name=None):
-    '''添加计时装饰器'''
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            start_time = time.time()
-            result = func(*args, **kwargs)
-            end_time = time.time()
-            name = func_name or func.__name__
-            print(f"{name}耗时: {end_time - start_time:.4f} 秒")
-            return result
-        return wrapper
-    return decorator
 
 
 @timing_decorator("检索上下文")
@@ -245,5 +253,6 @@ if __name__ == "__main__":
         
         response = chat_turn(user_input, user_id)
         #print(f"Travel Agent: {response}")
-
+    # 保存所有的对话信息到向量数据库中
+    save_interaction_to_vector_store_timing()
 

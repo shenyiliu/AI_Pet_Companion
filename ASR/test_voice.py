@@ -153,7 +153,7 @@ documents = [
 # start_time = time.time()
 # uuids = [str(uuid4()) for _ in range(len(documents))]
 
-vector_store.add_documents(documents=[document_11], ids=str(uuid4()))
+vector_store.add_documents(documents=documents, ids=str(uuid4()))
 # end_time = time.time()
 # print(f"添加文档执行时间: {end_time - start_time:.4f} 秒")
 

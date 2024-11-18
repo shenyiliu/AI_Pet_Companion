@@ -239,8 +239,6 @@ if __name__ == "__main__":
     # 历史纪录存入mem0向量数据库
     save_to_mem0(user_id)
 
-
-
     '''start调试信息'''
         # 获取全部记忆
     response = mem0.get_all(user_id=user_id)

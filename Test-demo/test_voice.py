@@ -1,10 +1,3 @@
-# import Voice as v
-
-
-# for i in range(3):
-#     v.Mem0_LLM_TTS("你好", "user123")
-
-
 
 # 测试链接chroma数据库
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage

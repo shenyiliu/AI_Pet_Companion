@@ -6,6 +6,7 @@ __pycache__/
 ASR/model/*
 ASR/db/*
 ASR/audio/*
+Test-demo/llama-cpp/*
 
 TTS/*
 ASR/*.txt

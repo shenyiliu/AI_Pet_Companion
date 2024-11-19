@@ -1,6 +1,7 @@
 openvino==2024.4.0
 openvino-genai==2024.4.0
 transformers==4.38.0
+torch<2.5.0  # for nncf
 optimum[openvino]
 modelscope
 funasr

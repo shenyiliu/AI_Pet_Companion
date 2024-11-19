@@ -3,11 +3,12 @@ import openvino as ov
 import sys
 import nncf
 from pathlib import Path
-from open_voice.utils import OVOpenVoiceTTS, OVOpenVoiceConverter
 now_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(now_dir)
 repo_dir = os.path.join(project_dir, "OpenVoice")
 sys.path.append(repo_dir)
+sys.path.append(project_dir)
+from open_voice.utils import OVOpenVoiceTTS, OVOpenVoiceConverter
 from openvoice.api import BaseSpeakerTTS, ToneColorConverter, OpenVoiceBaseClass
 import openvoice.se_extractor as se_extractor
 

@@ -2,6 +2,16 @@ import openvino as ov
 import os
 import sys
 import torch
+import random
+import uvicorn
+from pathlib import Path
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from io import BytesIO
+from os import PathLike
+import urllib.parse
+
 
 core = ov.Core()
 now_dir = os.path.dirname(os.path.abspath(__file__))
@@ -30,8 +40,107 @@ zh_source_se = torch.load(f"{zh_suffix}/zh_default_se.pth", weights_only=True)
 en_base_speaker_tts = BaseSpeakerTTS(f"{en_suffix}/config.json", device=pt_device)
 en_base_speaker_tts.load_ckpt(f"{en_suffix}/checkpoint.pth")
 
+print("load tone...")
+torch_hub_local = os.path.join(download_dir, "torch_hub_local")
+if not os.path.exists(torch_hub_local):
+    os.mkdir(torch_hub_local)
+os.environ["TORCH_HOME"] = torch_hub_local
+torch_hub_dir = os.path.join(torch_hub_local, "hub")
+torch.hub.set_dir(torch_hub_dir)
+
+import os
+import zipfile
+
+url = "https://github.com/snakers4/silero-vad/zipball/v3.0"
+
+torch_hub_dir = Path(os.path.join(torch_hub_local, "hub"))
+torch.hub.set_dir(torch_hub_dir.as_posix())
+
+def download_file(
+    url: PathLike,
+    filename: PathLike = None,
+    directory: PathLike = None,
+    silent: bool = False,
+) -> PathLike:
+    """
+    Download a file from a url and save it to the local filesystem. The file is saved to the
+    current directory by default, or to `directory` if specified. If a filename is not given,
+    the filename of the URL will be used.
+
+    :param url: URL that points to the file to download
+    :param filename: Name of the local file to save. Should point to the name of the file only,
+                     not the full path. If None the filename from the url will be used
+    :param directory: Directory to save the file to. Will be created if it doesn't exist
+                      If None the file will be saved to the current working directory
+    :param show_progress: If True, show an TQDM ProgressBar
+    :param silent: If True, do not print a message if the file already exists
+    :param timeout: Number of seconds before cancelling the connection attempt
+    :return: path to downloaded file
+    """
+    from tqdm.notebook import tqdm_notebook
+    import requests
+
+    filename = filename or Path(urllib.parse.urlparse(url).path).name
+    chunk_size = 16384  # make chunks bigger so that not too many updates are triggered for Jupyter front-end
+
+    filename = Path(filename)
+    if len(filename.parts) > 1:
+        raise ValueError(
+            "`filename` should refer to the name of the file, excluding the directory. "
+            "Use the `directory` parameter to specify a target directory for the downloaded file."
+        )
+
+    # create the directory if it does not exist, and add the directory to the filename
+    if directory is not None:
+        directory = Path(directory)
+        directory.mkdir(parents=True, exist_ok=True)
+        filename = directory / Path(filename)
+
+    try:
+        response = requests.get(url=url, headers={"User-agent": "Mozilla/5.0"}, stream=True)
+        response.raise_for_status()
+    except (
+        requests.exceptions.HTTPError
+    ) as error:  # For error associated with not-200 codes. Will output something like: "404 Client Error: Not Found for url: {url}"
+        raise Exception(error) from None
+    except requests.exceptions.Timeout:
+        raise Exception(
+            "Connection timed out. If you access the internet through a proxy server, please "
+            "make sure the proxy is set in the shell from where you launched Jupyter."
+        ) from None
+    except requests.exceptions.RequestException as error:
+        raise Exception(f"File downloading failed with error: {error}") from None
+
+    # download the file if it does not exist, or if it exists with an incorrect file size
+    filesize = int(response.headers.get("Content-length", 0))
+    if not filename.exists() or (os.stat(filename).st_size != filesize):
+        with open(filename, "wb") as file_object:
+            for chunk in response.iter_content(chunk_size):
+                file_object.write(chunk)
+    else:
+        if not silent:
+            print(f"'{filename}' already exists.")
+
+    response.close()
+
+    return filename.resolve()
+#
+zip_filename = "v3.0.zip"
+output_path = torch_hub_dir / "v3.0"
+if not (torch_hub_dir / zip_filename).exists():
+    download_file(url, directory=torch_hub_dir, filename=zip_filename)
+    zip_ref = zipfile.ZipFile((torch_hub_dir / zip_filename).as_posix(), "r")
+    zip_ref.extractall(path=output_path.as_posix())
+    zip_ref.close()
+
+v3_dirs = [d for d in output_path.iterdir() if "snakers4-silero-vad" in d.as_posix()]
+if len(v3_dirs) > 0 and not (torch_hub_dir / "snakers4_silero-vad_v3.0").exists():
+    v3_dir = str(v3_dirs[0])
+    os.rename(str(v3_dirs[0]), (torch_hub_dir / "snakers4_silero-vad_v3.0").as_posix())
+
 tone_color_converter = ToneColorConverter(f"{converter_suffix}/config.json", device=pt_device)
 tone_color_converter.load_ckpt(f"{converter_suffix}/checkpoint.pth")
+
 
 print("load chinese speak")
 zh_base_speaker_tts = BaseSpeakerTTS(os.path.join(zh_suffix,"config.json"), device=pt_device)
@@ -61,10 +170,11 @@ ZH_TTS_IR = os.path.join(output_ov_path, "openvoice_zh_tts.xml")
 VOICE_CONVERTER_IR = os.path.join(output_ov_path, "openvoice_tone_conversion.xml")
 
 # read ov model
+print("load openvino model...")
 paths = [EN_TTS_IR, VOICE_CONVERTER_IR, ZH_TTS_IR]
 ov_models = [core.read_model(ov_path) for ov_path in paths]
 ov_en_tts, ov_voice_conversion, ov_zh_tts = ov_models
-
+print("load openvino model finish")
 
 en_base_speaker_tts.model.infer = get_pathched_infer(ov_en_tts, ov_device)
 tone_color_converter.model.voice_conversion = get_patched_voice_conversion(
@@ -77,7 +187,9 @@ def predict(
     prompt: str,
     audio_file_path: str,
     style: str,
-    audio_output_dir: str
+    audio_output_dir: str,
+    se_output_dir: str
+
 ):
     supported_languages = ["zh", "en"]
     if language not in supported_languages:
@@ -134,40 +246,164 @@ def predict(
             "file_path": None,
             "message": text_hint
         }
-    try:
-        # 获取音色
-        target_se, audio_name = se_extractor.get_se(
-            audio_file_path,
-            tone_color_converter,
-            target_dir=output_dir,
-            vad=True
-        )
-        src_path = f"{audio_output_dir}/tmp.wav"
-        # 文本转语音
-        tts_model.tts(prompt, src_path, speaker=style, language=language)
-        save_path = f"{audio_output_dir}/output.wav"
-        # 下面这一行应该是固定的
-        encode_message = "@MyShell"
-        # 音色克隆
-        tone_color_converter.convert(
-            audio_src_path=src_path,
-            src_se=source_se,
-            tgt_se=target_se,
-            output_path=save_path,
-            message=encode_message,
-        )
-        text_hint = "Get response successfully \n"
-        return {
-            "status": "success",
-            "file_path": save_path,
-            "message": text_hint
-        }
-    except Exception as e:
-        text_hint = f"[ERROR] Get target tone color error {str(e)} \n"
+    # 获取音色
+    target_se, audio_name = se_extractor.get_se(
+        audio_file_path,
+        tone_color_converter,
+        target_dir=se_output_dir,
+        vad=True
+    )
+    src_path = f"{audio_output_dir}/tmp.wav"
+    # 文本转语音
+    tts_model.tts(prompt, src_path, speaker=style, language=language)
+    save_path = f"{audio_output_dir}/output.wav"
+    # 下面这一行应该是固定的
+    encode_message = "@MyShell"
+    # 音色克隆
+    tone_color_converter.convert(
+        audio_src_path=src_path,
+        src_se=source_se,
+        tgt_se=target_se,
+        output_path=save_path,
+        message=encode_message,
+    )
+    text_hint = "Get response successfully \n"
+    return {
+        "status": "success",
+        "file_path": save_path,
+        "message": text_hint
+    }
+    # except Exception as e:
+    #     text_hint = f"[ERROR] Get target tone color error {str(e)} \n"
+    #     return {
+    #         "status": "failed",
+    #         "file_path": None,
+    #         "message": text_hint
+    #    }
+
+
+app = FastAPI()
+
+# 存放说话人的位置
+speaker_wav_dir = os.path.join(output_dir, "speaker")
+if not os.path.exists(speaker_wav_dir):
+    os.mkdir(speaker_wav_dir)
+# 存放临时生成的cache的文件
+cache_dir = os.path.join(output_dir, "cache")
+if not os.path.exists(cache_dir):
+    os.mkdir(cache_dir)
+
+@app.post("/api/upload")
+async def api_upload(speaker_id: str, file: UploadFile = File(...)):
+    """
+    用于上传文件<br>
+    :param speaker_id: 说话人的id, 支持人名，称呼<br>
+    :param file: 说话人的录音文件，只支持.wav文件
+    """
+    if os.path.splitext(file.filename)[-1].lower() != ".wav":
+        return {"status": "failed", "data": "only .wav file can upload"}
+    temp_dir = os.path.join(speaker_wav_dir, speaker_id)
+    is_new = False
+    if not os.path.exists(temp_dir):
+        os.mkdir(temp_dir)
+        is_new = True
+    file_path = os.path.join(temp_dir, "speaker.wav")
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+    if is_new:
+        msg = "data upload OK!"
+    else:
+        msg = "data update OK!"
+    return {"status": "success", "data": msg}
+
+
+class TTSData(BaseModel):
+    prompt: str
+    speaker_id: str
+    language: str = 'zh'
+    style: str = "default"
+
+
+@app.post("/api/tts")
+def api_tts(data: TTSData):
+    """
+    声音克隆，文字转语音<br>
+    :param data:{<br>
+        "prompt" 想要AI输出的最终文本。<br>
+        "language": 输出语言是？建议选择'zh', 也就是中文<br>
+        "style": 说话风格, 中文不支持说话风格修改<br>
+    }<br>
+    """
+    speaker_wav_path = os.path.join(
+        speaker_wav_dir,
+        data.speaker_id,
+        "speaker.wav"
+    )
+    if not os.path.exists(speaker_wav_path):
         return {
             "status": "failed",
-            "file_path": None,
-            "message": text_hint
+            "data": "file not exists, you need upload file before tts"
         }
+    random_seed = random.randint(10000, 99999)
+    audio_output_dir = os.path.join(cache_dir, str(random_seed) + "_audio")
+    se_output_dir = os.path.join(cache_dir, str(random_seed) + "_se")
+    if not os.path.exists(audio_output_dir):
+        os.mkdir(audio_output_dir)
+    if not os.path.exists(se_output_dir):
+        os.mkdir(se_output_dir)
+    result_data = predict(
+        language=data.language,
+        prompt=data.prompt,
+        audio_file_path=speaker_wav_path,
+        style=data.style,
+        audio_output_dir=audio_output_dir,
+        se_output_dir=se_output_dir
+    )
+    # 清除se目录缓存
+    for file in os.listdir(se_output_dir):
+        temp_path = os.path.join(se_output_dir, file)
+        try:
+            os.remove(temp_path)
+        except:
+            print(f"删除{temp_path}失败")
+    if result_data["status"] == "success":
+        speaker_output_path = result_data["file_path"]
+        with open(speaker_output_path, "rb") as f2:
+            binary_data = f2.read()
+        output = BytesIO(binary_data)
+        file_name = data.speaker_id + "_output.wav"
+        headers = {
+            'Content-Disposition': 'attachment; filename="{}"'.format(file_name)
+        }
+        # 清理旧数据
+        for file in os.listdir(audio_output_dir):
+            temp_path = os.path.join(audio_output_dir, file)
+            try:
+                os.remove(temp_path)
+            except:
+                print(f"删除{temp_path}失败")
+        return StreamingResponse(output, headers=headers)
+    else:
+        # 清理旧数据
+        for file in os.listdir(audio_output_dir):
+            temp_path = os.path.join(audio_output_dir, file)
+            try:
+                os.remove(temp_path)
+            except:
+                print(f"删除{temp_path}失败")
+        return result_data
 
-# todo define fastapi api
+
+if __name__ == '__main__':
+    uvicorn.run(
+        app='api:app', host="127.0.0.1", port=5059, reload=False, workers=1,
+    )
+    """
+    uvicorn api:app --host 0.0.0.0  --port 5059 --reload --workers 1
+    """
+
+
+
+
+

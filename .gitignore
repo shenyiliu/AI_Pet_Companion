@@ -10,6 +10,8 @@ ASR/audio/*
 TTS/*
 ASR/*.txt
 kernel.errors.txt
+*/kernel.errors.txt
 download/
 GPT-SoVITS-Inference
 output/
+OpenVoice

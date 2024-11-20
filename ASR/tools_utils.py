@@ -1,9 +1,9 @@
 '''
-1.调整音量
-2.调整亮度
-3.检测电池状态
+1.调整音量   (完成)
+2.调整亮度   (完成)
+3.检测电池状态 (完成)
 适用于笔记本电脑，查询电池电量和剩余使用时间。
-4.开启/关闭省电模式
+4.开启/关闭省电模式  (完成)
 5.开启/关闭飞行模式
 6.打开/关闭实时字幕、
 7.打开/关闭任务管理器
@@ -115,7 +115,7 @@ def check_battery_status():
     except Exception as e:
         return f"获取电池信息时出错: {str(e)}"
 
-# 4.开启/关闭省电模式
+# 4.启/关闭省电模式
 def run_with_admin_rights(command):
     """
     以管理员权限运行命令
@@ -140,8 +140,8 @@ def run_with_admin_rights(command):
             1  # SW_SHOWNORMAL
         )
 
-# 5.开启/关闭省电模式
-def set_power_mode(enable: bool):
+# 4.1.开启/关闭省电模式
+def set_power_mode(enable: str):
     """
     控制 Windows 系统的省电模式
     :param enable: True 开启省电模式，False 关闭省电模式
@@ -155,6 +155,14 @@ def set_power_mode(enable: bool):
         # 创建临时批处理文件
         with tempfile.NamedTemporaryFile(delete=False, suffix='.bat', mode='w') as f:
             f.write('@echo off\n')
+            # 将 str 类型的 enable 转换为 bool 类型
+            if enable.lower() == 'true':
+                enable = True
+            elif enable.lower() == 'false':
+                enable = False
+            else:
+                return "输入错误，请输入 True 或 False"
+
             if enable:
                 # 切换到节能计划
                 f.write('powercfg /setactive a1841308-3541-4fab-bc81-f71556f20b4a\n')
@@ -215,6 +223,64 @@ def set_power_mode(enable: bool):
             
     except Exception as e:
         return f"设置省电模式时出错: {str(e)}"
+    
+# 5.开启/关闭飞行模式
+def set_airplane_mode(enable: str):
+    """
+    控制 Windows 系统的飞行模式
+    :param enable: "True" 开启飞行模式，"False" 关闭飞行模式
+    :return: 操作结果信息
+    """
+    try:
+        # 将字符串转换为布尔值
+        if enable.lower() == 'true':
+            enable = True
+        elif enable.lower() == 'false':
+            enable = False
+        else:
+            return "输入错误，请输入 True 或 False"
+            
+        # 使用 PowerShell 命令来控制飞行模式
+        import subprocess
+        
+        # 修改这里：将 On/Off 用引号括起来
+        radio_state = '"Off"' if enable else '"On"'
+        
+        ps_command = f'''
+        Add-Type -AssemblyName System.Runtime.WindowsRuntime
+        $asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | ? {{ $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' }})[0]
+        
+        Function Await($WinRtTask, $ResultType) {{
+            $asTask = $asTaskGeneric.MakeGenericMethod($ResultType)
+            $netTask = $asTask.Invoke($null, @($WinRtTask))
+            $netTask.Wait(-1) | Out-Null
+            $netTask.Result
+        }}
+        
+        [Windows.System.UserProfile.GlobalizationPreferences,Windows.System.UserProfile,ContentType=WindowsRuntime] | Out-Null
+        [Windows.Networking.Connectivity.NetworkInformation,Windows.Networking.Connectivity,ContentType=WindowsRuntime] | Out-Null
+        [Windows.Radio.RadioAccessStatus,Windows.Radio,ContentType=WindowsRuntime] | Out-Null
+        
+        $radio = [Windows.Devices.Radios.Radio,Windows.System.Devices,ContentType=WindowsRuntime]
+        $radios = Await ([Windows.Devices.Radios.Radio]::RequestAccessAsync()) ([Windows.Devices.Radios.RadioAccessStatus])
+        $radios = Await ([Windows.Devices.Radios.Radio]::GetRadiosAsync()) ([System.Collections.Generic.IReadOnlyList[Windows.Devices.Radios.Radio]])
+        
+        foreach ($radio in $radios) {{
+            Await ($radio.SetStateAsync({radio_state})) ([Windows.Devices.Radios.RadioAccessStatus])
+        }}
+        '''
+        
+        # 执行 PowerShell 命令
+        result = subprocess.run(["powershell", "-Command", ps_command], 
+                              capture_output=True, text=True)
+                              
+        if result.returncode == 0:
+            return f"飞行模式已{'开启' if enable else '关闭'}"
+        else:
+            return f"设置失败: {result.stderr}"
+            
+    except Exception as e:
+        return f"设置飞行模式时出错: {str(e)}"
 
 if __name__ == "__main__":
     # 1.测试控制音量函数
@@ -228,7 +294,10 @@ if __name__ == "__main__":
     # print(battery_info)
     
     # 4.测试省电模式控制函数
+    #print(set_power_mode("True"))   # 开启省电模式
+    #print(set_power_mode("False"))  # 关闭省电模式
 
-    #print(set_power_mode(True))   # 开启省电模式
-    #print(set_power_mode(False))  # 关闭省电模式
+    # 5.测试飞行模式控制函数
+    #print(set_airplane_mode("True"))   # 开启飞行模式
+    print(set_airplane_mode("False"))  # 关闭飞行模式
 

@@ -331,6 +331,55 @@ def control_calculator(enable: str):
     except Exception as e:
         return f"操作计算器时出错: {str(e)}"
 
+# 7.打开/关闭任务管理器
+def control_task_manager(enable: str):
+    """
+    控制 Windows 系统任务管理器的打开/关闭
+    :param enable: "True" 打开任务管理器，"False" 关闭任务管理器
+    :return: 操作结果信息的字符串
+    """
+    try:
+        # 将字符串转换为布尔值
+        if enable.lower() == 'true':
+            enable = True
+        elif enable.lower() == 'false':
+            enable = False
+        else:
+            return "输入错误，请输入 True 或 False"
+            
+        import subprocess
+        import tempfile
+        import os
+        import time
+        
+        if enable:
+            # 使用 PowerShell 命令打开任务管理器
+            subprocess.run(['powershell', 'Start-Process', 'taskmgr.exe'])
+            return "任务管理器已打开"
+        else:
+            # 创建临时 PowerShell 脚本文件
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.ps1', mode='w') as f:
+                f.write('Stop-Process -Name Taskmgr -Force\n')
+                ps_file = f.name
+            
+            # 使用 PowerShell 以管理员权限执行脚本
+            command = f'powershell -Command "Start-Process powershell -ArgumentList \'-ExecutionPolicy Bypass -File {ps_file}\' -Verb RunAs"'
+            subprocess.run(command, shell=True)
+            
+            # 等待命令执行完成
+            time.sleep(1)
+            
+            # 删除临时文件
+            try:
+                os.unlink(ps_file)
+            except:
+                pass
+                
+            return "任务管理器已关闭"
+                
+    except Exception as e:
+        return f"操作任务管理器时出错: {str(e)}"
+
 if __name__ == "__main__":
     # 1.测试控制音量函数
     # Set_volume("100")
@@ -352,8 +401,13 @@ if __name__ == "__main__":
 
     # 6.测试打开/关闭计算器
     #print(control_calculator("True"))   # 打开计算器
-    # 等待几秒后
-    print(control_calculator("False"))  # 关闭计算器
+    #print(control_calculator("False"))  # 关闭计算器
+    
+    # 7.测试打开/关闭任务管理器
+    #print(control_task_manager("True"))   # 打开任务管理器
+    #print(control_task_manager("False"))  # 关闭任务管理器
+
+    
     
 
 

@@ -140,6 +140,7 @@ def run_with_admin_rights(command):
             1  # SW_SHOWNORMAL
         )
 
+# 5.开启/关闭省电模式
 def set_power_mode(enable: bool):
     """
     控制 Windows 系统的省电模式
@@ -210,10 +211,10 @@ def set_power_mode(enable: bool):
         except:
             pass
             
-        print(f"省电模式已{'开启' if enable else '关闭'}")
+        return f"省电模式已{'开启' if enable else '关闭'}"
             
     except Exception as e:
-        print(f"设置省电模式时出错: {str(e)}")
+        return f"设置省电模式时出错: {str(e)}"
 
 if __name__ == "__main__":
     # 1.测试控制音量函数
@@ -228,6 +229,6 @@ if __name__ == "__main__":
     
     # 4.测试省电模式控制函数
 
-    #set_power_mode(True)   # 开启省电模式
-    set_power_mode(False)  # 关闭省电模式
-    #os.system('powercfg /list')
+    #print(set_power_mode(True))   # 开启省电模式
+    #print(set_power_mode(False))  # 关闭省电模式
+

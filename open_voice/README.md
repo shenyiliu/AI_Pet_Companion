@@ -6,9 +6,9 @@
     conda install ffmpeg
     ```
 3. 下载模型到download目录。[OpenVoice](https://huggingface.co/myshell-ai/OpenVoice), [WavMark](https://huggingface.co/M4869/WavMark)（可选）
-4. 下载`silero-vad`到download目录
+4. 下载`silero-vad`到`download/torch_hub_local/hub`目录
    ```bash
-   git clone --depth 1  -b v3.0 https://github.com/snakers4/silero-vad download/snakers4_silero-vad_v3.0
+   git clone --depth 1  -b v3.0 https://github.com/snakers4/silero-vad download/torch_hub_local/hub/snakers4_silero-vad_v3.0
    ```
 5. 运行`open_voice/get_openvoice.py`获取OpenVoice代码，并进行少量修改。
    ```bash
@@ -32,3 +32,9 @@
    ```bash
    python open_voice/convert_to_ov.py
    ```
+8. 输入下面的命令，运行api
+   ```bash
+   cd open_voice
+   uvicorn api:app --host 127.0.0.1  --port 5059 --workers 1
+   ```
+   

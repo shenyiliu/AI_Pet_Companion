@@ -1,10 +1,16 @@
 ### 简单说明
 - 参考了[官方教程](https://github.com/openvinotoolkit/openvino_notebooks/blob/latest/notebooks/openvoice/openvoice.ipynb)
-1. 复用项目根目录readme创建的openvino虚拟环境。
-2. 另行安装一下ffmpeg
+1. 创建一个虚拟环境openvoice，顺便安装ffmpeg
+   ```bash
+   conda create -n openvoice python==3.10 -y
+   conda activate openvoice
+   conda install ffmpeg
+   ```
+2. 安装openvoice关联依赖
     ```bash
-    conda install ffmpeg
+    pip install -r open_voice/requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
     ```
+
 3. 下载模型到download目录。[OpenVoice](https://huggingface.co/myshell-ai/OpenVoice), [WavMark](https://huggingface.co/M4869/WavMark)（可选）
 4. 下载`silero-vad`到`download/torch_hub_local/hub`目录
    ```bash

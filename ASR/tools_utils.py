@@ -1,14 +1,14 @@
 '''
 1.调整音量
 2.调整亮度
-3.打开/关闭摄像头,拍一张照片
+3.检测电池状态
+适用于笔记本电脑，查询电池电量和剩余使用时间。
 4.打开/关闭实时字幕、
 5.打开/关闭任务管理器
 6.截图当前窗口并保存到桌面
 7.获取系统基本信息
 比如 CPU、内存、磁盘使用情况。
-8.检测电池状态
-适用于笔记本电脑，查询电池电量和剩余使用时间。
+8.打开/关闭摄像头,拍一张照片
 '''
 
 from ctypes import cast, POINTER
@@ -69,9 +69,46 @@ def Set_brightness(brightness_level: str):
     except Exception as e:
         print(f"设置亮度时出错: {str(e)}")
 
-# 3.打开/关闭摄像头
-
-
+# 3.检测电池状态
+def check_battery_status():
+    """
+    检测Windows系统电池状态
+    :return: 包含电池信息的字典
+    """
+    try:
+        import psutil
+        
+        # 获取电池信息
+        battery = psutil.sensors_battery()
+        
+        if battery is None:
+            return "未检测到电池，可能是台式电脑或电池驱动异常"
+            
+        # 获取电池信息
+        percent = battery.percent  # 电池百分比
+        power_plugged = battery.power_plugged  # 是否插入电源
+        seconds_left = battery.secsleft  # 剩余使用时间(秒)
+        
+        # 计算剩余时间
+        if seconds_left == psutil.POWER_TIME_UNLIMITED:
+            time_left = "电源已连接"
+        elif seconds_left == psutil.POWER_TIME_UNKNOWN:
+            time_left = "无法估计剩余时间"
+        else:
+            hours = seconds_left // 3600
+            minutes = (seconds_left % 3600) // 60
+            time_left = f"{hours}小时{minutes}分钟"
+        
+        # 构建返回信息
+        status = {
+            "电池电量": f"{percent}%",
+            "电源状态": "已连接电源" if power_plugged else "使用电池中",
+        }
+        
+        return status
+        
+    except Exception as e:
+        return f"获取电池信息时出错: {str(e)}"
 
 if __name__ == "__main__":
     # 1.测试控制音量函数
@@ -79,3 +116,7 @@ if __name__ == "__main__":
     
     # 2.测试控制亮度函数
     # Set_brightness("75")
+    
+    # 3.测试电池状态检测函数
+    battery_info = check_battery_status()
+    print(battery_info)

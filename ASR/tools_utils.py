@@ -6,7 +6,7 @@
 4.开启/关闭省电模式  (完成)
 5.开启/关闭飞行模式  (完成)
 6.打开/关闭计算器  (完成)
-7.打开/关闭任务管理器
+7.打开/关闭任务管理器 (完成)
 8.截图当前窗口并保存到桌面
 9.获取系统基本信息
 比如 CPU、内存、磁盘使用情况。
@@ -380,6 +380,41 @@ def control_task_manager(enable: str):
     except Exception as e:
         return f"操作任务管理器时出错: {str(e)}"
 
+# 8.截图当前窗口并保存到桌面
+def capture_screen() -> str:
+    """
+    截取当前窗口并保存到桌面
+    :param enable: "True" 开始截图，其他值返回使用说明
+    :return: {'message': '截图保存成功', 'imagePath': 'C:\\Users\\shenyi\\Desktop\\screenshot_20241121_075117.png'}
+    """
+    try:
+        # 导入所需模块
+        import pyautogui
+        import os
+        from datetime import datetime
+        
+        # 获取桌面路径
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+        
+        # 生成带时间戳的文件名
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"screenshot_{timestamp}.png"
+        filepath = os.path.join(desktop_path, filename)
+        
+        # 截图
+        screenshot = pyautogui.screenshot()
+        
+        # 保存图片
+        screenshot.save(filepath)
+        
+        # 使用系统默认程序打开图片
+        os.startfile(filepath)
+
+        return {"message":"截图保存成功","imagePath":filepath}
+        
+    except Exception as e:
+        return f"截图过程出错: {str(e)}"
+
 if __name__ == "__main__":
     # 1.测试控制音量函数
     # Set_volume("100")
@@ -407,7 +442,9 @@ if __name__ == "__main__":
     #print(control_task_manager("True"))   # 打开任务管理器
     #print(control_task_manager("False"))  # 关闭任务管理器
 
-    
+    # 8.测试截图功能
+    #print(capture_screen())
+
     
 
 

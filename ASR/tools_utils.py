@@ -4,8 +4,8 @@
 3.检测电池状态 (完成)
 适用于笔记本电脑，查询电池电量和剩余使用时间。
 4.开启/关闭省电模式  (完成)
-5.开启/关闭飞行模式
-6.打开/关闭实时字幕、
+5.开启/关闭飞行模式  (完成)
+6.打开/关闭计算器  (完成)
 7.打开/关闭任务管理器
 8.截图当前窗口并保存到桌面
 9.获取系统基本信息
@@ -18,6 +18,7 @@ from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import wmi
 import os
+import sys
 
 # 1.调整音量
 def Set_volume(volume_level:str):
@@ -155,7 +156,7 @@ def set_power_mode(enable: str):
         # 创建临时批处理文件
         with tempfile.NamedTemporaryFile(delete=False, suffix='.bat', mode='w') as f:
             f.write('@echo off\n')
-            # 将 str 类型的 enable 转换为 bool 类型
+            # 将 str 类型 enable 转换为 bool 类型
             if enable.lower() == 'true':
                 enable = True
             elif enable.lower() == 'false':
@@ -282,6 +283,54 @@ def set_airplane_mode(enable: str):
     except Exception as e:
         return f"设置飞行模式时出错: {str(e)}"
 
+# 6.打开/关闭计算器
+def control_calculator(enable: str):
+    """
+    控制 Windows 系统计算器的打开/关闭
+    :param enable: "True" 打开计算器，"False" 关闭计算器
+    :return: 操作结果信息
+    """
+    try:
+        # 将字符串转换为布尔值
+        if enable.lower() == 'true':
+            enable = True
+        elif enable.lower() == 'false':
+            enable = False
+        else:
+            return "输入错误，请输入 True 或 False"
+            
+        import subprocess
+        
+        if enable:
+            # 打开计算器
+            subprocess.Popen('calc.exe')
+            return "计算器已打开"
+        else:
+            # Windows 11 计算器的进程名是 CalculatorApp.exe
+            result = subprocess.run(['taskkill', '/F', '/IM', 'CalculatorApp.exe'], 
+                                 capture_output=True, 
+                                 text=True)
+            
+            # 如果第一次尝试失败，尝试其他可能的进程名
+            if result.returncode != 0:
+                # 尝试 Calculator.exe
+                result = subprocess.run(['taskkill', '/F', '/IM', 'Calculator.exe'], 
+                                     capture_output=True, 
+                                     text=True)
+                if result.returncode != 0:
+                    # 最后尝试 calc.exe
+                    result = subprocess.run(['taskkill', '/F', '/IM', 'calc.exe'], 
+                                         capture_output=True, 
+                                         text=True)
+            
+            if result.returncode == 0:
+                return "计算器已关闭"
+            else:
+                return "未找到正在运行的计算器程序"
+                
+    except Exception as e:
+        return f"操作计算器时出错: {str(e)}"
+
 if __name__ == "__main__":
     # 1.测试控制音量函数
     # Set_volume("100")
@@ -299,5 +348,13 @@ if __name__ == "__main__":
 
     # 5.测试飞行模式控制函数
     #print(set_airplane_mode("True"))   # 开启飞行模式
-    print(set_airplane_mode("False"))  # 关闭飞行模式
+    #print(set_airplane_mode("False"))  # 关闭飞行模式
+
+    # 6.测试打开/关闭计算器
+    #print(control_calculator("True"))   # 打开计算器
+    # 等待几秒后
+    print(control_calculator("False"))  # 关闭计算器
+    
+
+
 

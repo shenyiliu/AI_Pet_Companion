@@ -7,9 +7,10 @@
 5.开启/关闭飞行模式  (完成)
 6.打开/关闭计算器  (完成)
 7.打开/关闭任务管理器 (完成)
-8.截图当前窗口并保存到桌面
-9.获取系统基本信息
-比如 CPU、内存、磁盘使用情况。
+8.截图当前窗口并保存到桌面  (完成)
+9.获取系统基本信息  (完成)
+比如 CPU、内存使用情况。 (完成)
+
 10.打开/关闭摄像头,拍一张照片
 '''
 
@@ -75,8 +76,6 @@ def Set_brightness(brightness_level: str):
 
 # 3.检测电池状态
 def check_battery_status():
-
-
     """
     检测Windows系统电池状态
     :return: 包含电池信息的字典
@@ -415,6 +414,64 @@ def capture_screen() -> str:
     except Exception as e:
         return f"截图过程出错: {str(e)}"
 
+# 9.获取系统基本信息
+# 比如 CPU、内存使用情况。
+def get_system_info() -> str:
+    """
+    获取Windows系统的基本信息，包括CPU、内存和磁盘使用情况
+    :return: 包含系统信息的字符串
+    """
+    try:
+        import psutil
+        import platform
+        from datetime import datetime
+
+        # 获取CPU信息
+        cpu_percent = psutil.cpu_percent(interval=1)  # CPU使用率
+        cpu_count = psutil.cpu_count()  # CPU核心数
+        cpu_freq = psutil.cpu_freq()  # CPU频率
+
+        # 获取内存信息
+        memory = psutil.virtual_memory()
+        # 转换为GB
+        total_memory = round(memory.total / (1024**3), 2)
+        available_memory = round(memory.available / (1024**3), 2)
+        used_memory = round(memory.used / (1024**3), 2)
+        memory_percent = memory.percent
+
+        # 获取磁盘信息
+        disk_info = []
+        for partition in psutil.disk_partitions():
+            try:
+                partition_usage = psutil.disk_usage(partition.mountpoint)
+                total_size = round(partition_usage.total / (1024**3), 2)
+                used_size = round(partition_usage.used / (1024**3), 2)
+                free_size = round(partition_usage.free / (1024**3), 2)
+                disk_info.append(f"    {partition.device} ({partition.mountpoint}):\n"
+                               f"      总容量: {total_size} GB\n"
+                               f"      已用: {used_size} GB\n"
+                               f"      可用: {free_size} GB\n"
+                               f"      使用率: {partition_usage.percent}%")
+            except:
+                continue
+
+        # 格式化输出信息
+        system_info = f"""
+CPU信息:
+    核心数: {cpu_count}个
+    当前使用率: {cpu_percent}%
+    当前频率: {round(cpu_freq.current, 2)} MHz
+
+内存信息:
+    已用内存: {used_memory} GB
+    可用内存: {available_memory} GB
+    内存使用率: {memory_percent}%
+"""
+        return system_info
+
+    except Exception as e:
+        return f"获取系统信息时出错: {str(e)}"
+
 if __name__ == "__main__":
     # 1.测试控制音量函数
     # Set_volume("100")
@@ -444,6 +501,9 @@ if __name__ == "__main__":
 
     # 8.测试截图功能
     #print(capture_screen())
+
+    # 9.测试获取系统信息函数
+    #print(get_system_info())
 
     
 

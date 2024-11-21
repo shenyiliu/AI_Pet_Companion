@@ -38,7 +38,10 @@
    ```bash
    python open_voice/convert_to_ov.py
    ```
-8. 输入下面的命令，运行api
+8. 对于Win10/Win11系统，打开设置，搜索开发者设置，勾选`开发者模式`。不开启则下面运行api会报没有权限创建软链接。[参考链接](https://www.scivision.dev/windows-symbolic-link-permission-enable/)
+![development_mode](../images/development_mode.png)
+
+9. 输入下面的命令，运行api
    ```bash
    cd open_voice
    uvicorn api:app --host 127.0.0.1  --port 5059 --workers 1

@@ -57,7 +57,8 @@ def get_llm_instance():
     global _llm_instance
     if _llm_instance is None:
         _llm_instance = ChatOllama(
-            model="qwen2.5_lora_Q4_K_M:latest",
+            #model="qwen2.5_lora_Q4_K_M:latest",
+            model="qwen2.5:7b-instruct-q4_K_M",
             streaming=True,
             keep_alive=-1,  # 设置更长的保活时间（毫秒）
             temperature=0.8,

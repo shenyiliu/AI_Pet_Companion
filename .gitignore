@@ -20,3 +20,4 @@ download/
 GPT-SoVITS-Inference
 output/
 OpenVoice
+download/torch_hub_local/*

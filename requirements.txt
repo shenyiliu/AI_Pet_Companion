@@ -18,3 +18,4 @@ chromadb
 langchain-ollama
 langgraph
 langchain-chroma>=0.1.2
+pygame

@@ -379,10 +379,9 @@ def control_task_manager(enable: str):
         return f"操作任务管理器时出错: {str(e)}"
 
 # 8.截图当前窗口并保存到桌面
-def capture_screen() -> str:
+def capture_screen():
     """
     截取当前窗口并保存到桌面
-    :param enable: "True" 开始截图，其他值返回使用说明
     :return: {'message': '截图保存成功', 'imagePath': 'C:\\Users\\shenyi\\Desktop\\screenshot_20241121_075117.png'}
     """
     try:

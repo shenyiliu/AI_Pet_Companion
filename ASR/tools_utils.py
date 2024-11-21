@@ -21,7 +21,7 @@ import os
 import sys
 
 # 1.调整音量
-def Set_volume(volume_level:str):
+def set_volume(volume_level:str):
     """
     设置 Windows 系统音量
     :param volume_level: 音量大小(1-100的整数)
@@ -49,7 +49,7 @@ def Set_volume(volume_level:str):
         return
 
 # 2.调整亮度
-def Set_brightness(brightness_level: str):
+def set_brightness(brightness_level: str):
     """
     设置 Windows 系统屏幕亮度
     :param brightness_level: 亮度值(1-100的整数)
@@ -522,10 +522,10 @@ def control_camera() -> dict:
 
 if __name__ == "__main__":
     # 1.测试控制音量函数
-    #print(Set_volume("100"))
+    #print(set_volume("100"))
     
     # 2.测试控制亮度函数
-    #print(Set_brightness("75"))
+    #print(set_brightness("75"))
     
     # 3.测试电池状态检测函数
     # battery_info = check_battery_status()

@@ -10,8 +10,7 @@
 8.截图当前窗口并保存到桌面  (完成)
 9.获取系统基本信息  (完成)
 比如 CPU、内存使用情况。 (完成)
-
-10.打开/关闭摄像头,拍一张照片
+10.打开/关闭摄像头,拍一张照片 (完成)
 '''
 
 from ctypes import cast, POINTER
@@ -472,6 +471,55 @@ CPU信息:
     except Exception as e:
         return f"获取系统信息时出错: {str(e)}"
 
+# 10.打开/关闭摄像头,拍一张照片
+def control_camera() -> dict:
+    """
+    控制摄像头开关并拍照
+    :return: dict {"message": "执行结果信息", "imagePath": "图片保存路径"}
+    """
+    try:
+        import cv2
+        import os
+        from datetime import datetime
+        
+        # 检查并创建image文件夹
+        image_dir = os.path.join(os.getcwd(), "image")
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
+            
+        # 打开摄像头
+        cap = cv2.VideoCapture(0)
+        
+        if not cap.isOpened():
+            return {"message": "无法打开摄像头", "imagePath": ""}
+            
+        # 等待摄像头预热
+        import time
+        time.sleep(1)
+        
+        # 拍照
+        ret, frame = cap.read()
+        
+        if not ret:
+            cap.release()
+            return {"message": "无法获取图像", "imagePath": ""}
+            
+        # 生成文件名（使用时间戳）
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        image_path = os.path.join(image_dir, f"camera_{timestamp}.jpg")
+        
+        # 保存图片
+        cv2.imwrite(image_path, frame)
+        
+        # 关闭摄像头
+        cap.release()
+        
+        return {"message": "拍照成功", "imagePath": image_path}
+            
+            
+    except Exception as e:
+        return {"message": f"操作摄像头时出错: {str(e)}", "imagePath": ""}
+
 if __name__ == "__main__":
     # 1.测试控制音量函数
     # Set_volume("100")
@@ -505,7 +553,11 @@ if __name__ == "__main__":
     # 9.测试获取系统信息函数
     #print(get_system_info())
 
-    
+    # 10.测试控制摄像头开关并拍照
+    print(control_camera())   # 打开摄像头并拍照
+
+
+
 
 
 

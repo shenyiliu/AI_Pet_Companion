@@ -532,6 +532,29 @@ def control_camera() -> dict:
     except Exception as e:
         return Response.failed(f"操作摄像头时出错: {str(e)}")
 
+# 11.获取当前音量大小
+def get_volume():
+    """
+    获取 Windows 系统当前音量
+    :return: 包含音量信息的Response对象
+    """
+    try:
+        # 获取音频设备
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        
+        # 获取当前音量值(范围0.0-1.0)
+        current_volume = volume.GetMasterVolumeLevelScalar()
+        
+        # 将音量转换为0-100的整数
+        volume_percentage = int(round(current_volume * 100))
+        
+        return Response.success(f"当前系统音量为: {volume_percentage}%")
+        
+    except Exception as e:
+        return Response.failed(f"获取音量时出错: {str(e)}")
+
 if __name__ == "__main__":
     # 1.测试控制音量函数
     #print(set_volume("100"))
@@ -566,7 +589,10 @@ if __name__ == "__main__":
     #print(get_system_info())
 
     # 10.测试控制摄像头开关并拍照
-    print(control_camera())   # 打开摄像头并拍照
+    #print(control_camera())   # 打开摄像头并拍照
+
+    # 11.测试获取当前音量函数
+    print(get_volume())
 
 
 

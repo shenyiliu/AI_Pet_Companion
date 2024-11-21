@@ -12,6 +12,7 @@
 比如 CPU、内存使用情况。 (完成)
 10.打开/关闭摄像头,拍一张照片 (完成)
 11.获取当前音量大小 (完成)
+12.获取当前屏幕亮度大小 (完成)
 '''
 
 from ctypes import cast, POINTER
@@ -524,7 +525,7 @@ def control_camera() -> dict:
         # 保存图片
         cv2.imwrite(image_path, frame)
         
-        # 关闭摄像头
+        # 关闭摄像���
         cap.release()
         
         return Response.success("拍照成功", image_path)
@@ -555,6 +556,27 @@ def get_volume():
         
     except Exception as e:
         return Response.failed(f"获取音量时出错: {str(e)}")
+
+# 12.获取当前屏幕亮度大小
+def get_brightness():
+    """
+    获取 Windows 系统当前屏幕亮度
+    :return: 包含亮度信息的Response对象
+    """
+    try:
+        # 创建WMI接口
+        wmi_interface = wmi.WMI(namespace='wmi')
+        
+        # 获取亮度信息
+        brightness = wmi_interface.WmiMonitorBrightness()[0]
+        current_brightness = brightness.CurrentBrightness
+        
+        return Response.success(f"当前屏幕亮度为: {current_brightness}%")
+        
+    except IndexError:
+        return Response.failed("无法获取屏幕亮度信息，可能是当前设备不支持亮度调节")
+    except Exception as e:
+        return Response.failed(f"获取屏幕亮度时出错: {str(e)}")
 
 if __name__ == "__main__":
     # 1.测试控制音量函数
@@ -594,6 +616,9 @@ if __name__ == "__main__":
 
     # 11.测试获取当前音量函数
     print(get_volume())
+
+    # 12.测试获取当前屏幕亮度大小
+    print(get_brightness())
 
 
 

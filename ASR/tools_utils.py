@@ -43,10 +43,10 @@ def Set_volume(volume_level:str):
         # 设置音量
         volume.SetMasterVolumeLevelScalar(volume_scalar, None)
         
-        print(f"系统音量已设置为: {volume_level}%")
+        return f"系统音量已设置为: {volume_level}%"
         
     except Exception as e:
-        print(f"设置音量时出错: {str(e)}")
+        return
 
 # 2.调整亮度
 def Set_brightness(brightness_level: str):
@@ -68,10 +68,10 @@ def Set_brightness(brightness_level: str):
         # 设置亮度
         brightness_methods.WmiSetBrightness(brightness_level, 0)
         
-        print(f"屏幕亮度已设置为: {brightness_level}%")
+        return f"屏幕亮度已设置为: {brightness_level}%"
         
     except Exception as e:
-        print(f"设置亮度时出错: {str(e)}")
+        return f"设置亮度时出错: {str(e)}"
 
 # 3.检测电池状态
 def check_battery_status():
@@ -522,10 +522,10 @@ def control_camera() -> dict:
 
 if __name__ == "__main__":
     # 1.测试控制音量函数
-    # Set_volume("100")
+    #print(Set_volume("100"))
     
     # 2.测试控制亮度函数
-    # Set_brightness("75")
+    #print(Set_brightness("75"))
     
     # 3.测试电池状态检测函数
     # battery_info = check_battery_status()

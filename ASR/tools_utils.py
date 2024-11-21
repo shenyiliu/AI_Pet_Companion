@@ -23,25 +23,27 @@ import os
 import sys
 
 class Response:
-    def __init__(self, status="success", message="", image_path=""):
+    def __init__(self, status="success", message="", image_path="", data=""):
         self.status = status
         self.message = message 
         self.image_path = image_path
+        self.data = data
 
     def to_dict(self):
         return {
             "status": self.status,
             "message": self.message,
-            "imagePath": self.image_path
+            "imagePath": self.image_path,
+            "data": self.data
         }
 
     @staticmethod
-    def success(message="", image_path=""):
-        return Response("success", message, image_path).to_dict()
+    def success(message="", image_path="", data=""):
+        return Response("success", message, image_path, data).to_dict()
 
     @staticmethod 
-    def failed(message="", image_path=""):
-        return Response("failed", message, image_path).to_dict()
+    def failed(message="", image_path="", data=""):
+        return Response("failed", message, image_path, data).to_dict()
 
 # 1.调整音量
 def set_volume(volume_level:str):
@@ -552,7 +554,7 @@ def get_volume():
         # 将音量转换为0-100的整数
         volume_percentage = int(round(current_volume * 100))
         
-        return Response.success(f"当前系统音量为: {volume_percentage}%")
+        return Response.success(f"当前系统音量为: {volume_percentage}%", data=volume_percentage)
         
     except Exception as e:
         return Response.failed(f"获取音量时出错: {str(e)}")
@@ -571,7 +573,7 @@ def get_brightness():
         brightness = wmi_interface.WmiMonitorBrightness()[0]
         current_brightness = brightness.CurrentBrightness
         
-        return Response.success(f"当前屏幕亮度为: {current_brightness}%")
+        return Response.success(f"当前屏幕亮度为: {current_brightness}%", data=current_brightness)
         
     except IndexError:
         return Response.failed("无法获取屏幕亮度信息，可能是当前设备不支持亮度调节")

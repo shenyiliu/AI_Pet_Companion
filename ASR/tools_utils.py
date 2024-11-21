@@ -20,6 +20,27 @@ import wmi
 import os
 import sys
 
+class Response:
+    def __init__(self, status="success", message="", image_path=""):
+        self.status = status
+        self.message = message 
+        self.image_path = image_path
+
+    def to_dict(self):
+        return {
+            "status": self.status,
+            "message": self.message,
+            "imagePath": self.image_path
+        }
+
+    @staticmethod
+    def success(message="", image_path=""):
+        return Response("success", message, image_path).to_dict()
+
+    @staticmethod 
+    def failed(message="", image_path=""):
+        return Response("failed", message, image_path).to_dict()
+
 # 1.调整音量
 def set_volume(volume_level:str):
     """
@@ -43,10 +64,10 @@ def set_volume(volume_level:str):
         # 设置音量
         volume.SetMasterVolumeLevelScalar(volume_scalar, None)
         
-        return f"系统音量已设置为: {volume_level}%"
+        return Response.success(f"系统音量已设置为: {volume_level}%")
         
     except Exception as e:
-        return
+        return Response.failed(f"设置音量时出错: {str(e)}")
 
 # 2.调整亮度
 def set_brightness(brightness_level: str):
@@ -68,10 +89,10 @@ def set_brightness(brightness_level: str):
         # 设置亮度
         brightness_methods.WmiSetBrightness(brightness_level, 0)
         
-        return f"屏幕亮度已设置为: {brightness_level}%"
+        return Response.success(f"屏幕亮度已设置为: {brightness_level}%")
         
     except Exception as e:
-        return f"设置亮度时出错: {str(e)}"
+        return Response.failed(f"设置亮度时出错: {str(e)}")
 
 # 3.检测电池状态
 def check_battery_status():
@@ -218,10 +239,10 @@ def set_power_mode(enable: str):
         except:
             pass
             
-        return f"省电模式已{'开启' if enable else '关闭'}"
+        return Response.success(f"省电模式已{'开启' if enable else '关闭'}")
             
     except Exception as e:
-        return f"设置省电模式时出错: {str(e)}"
+        return Response.failed(f"设置省电模式时出错: {str(e)}")
     
 # 5.开启/关闭飞行模式
 def set_airplane_mode(enable: str):
@@ -274,12 +295,12 @@ def set_airplane_mode(enable: str):
                               capture_output=True, text=True)
                               
         if result.returncode == 0:
-            return f"飞行模式已{'开启' if enable else '关闭'}"
+            return Response.success(f"飞行模式已{'开启' if enable else '关闭'}")
         else:
-            return f"设置失败: {result.stderr}"
+            return Response.failed(f"设置失败: {result.stderr}")
             
     except Exception as e:
-        return f"设置飞行模式时出错: {str(e)}"
+        return Response.failed(f"设置飞行模式时出错: {str(e)}")
 
 # 6.打开/关闭计算器
 def control_calculator(enable: str):
@@ -302,7 +323,7 @@ def control_calculator(enable: str):
         if enable:
             # 打开计算器
             subprocess.Popen('calc.exe')
-            return "计算器已打开"
+            return Response.success("计算器已打开")
         else:
             # Windows 11 计算器的进程名是 CalculatorApp.exe
             result = subprocess.run(['taskkill', '/F', '/IM', 'CalculatorApp.exe'], 
@@ -322,12 +343,12 @@ def control_calculator(enable: str):
                                          text=True)
             
             if result.returncode == 0:
-                return "计算器已关闭"
+                return Response.success("计算器已关闭")
             else:
-                return "未找到正在运行的计算器程序"
+                return Response.failed("未找到正在运行的计算器程序")
                 
     except Exception as e:
-        return f"操作计算器时出错: {str(e)}"
+        return Response.failed(f"操作计算器时出错: {str(e)}")
 
 # 7.打开/关闭任务管理器
 def control_task_manager(enable: str):
@@ -353,7 +374,7 @@ def control_task_manager(enable: str):
         if enable:
             # 使用 PowerShell 命令打开任务管理器
             subprocess.run(['powershell', 'Start-Process', 'taskmgr.exe'])
-            return "任务管理器已打开"
+            return Response.success("任务管理器已打开")
         else:
             # 创建临时 PowerShell 脚本文件
             with tempfile.NamedTemporaryFile(delete=False, suffix='.ps1', mode='w') as f:
@@ -373,10 +394,10 @@ def control_task_manager(enable: str):
             except:
                 pass
                 
-            return "任务管理器已关闭"
+            return Response.success("任务管理器已关闭")
                 
     except Exception as e:
-        return f"操作任务管理器时出错: {str(e)}"
+        return Response.failed(f"操作任务管理器时出错: {str(e)}")
 
 # 8.截图当前窗口并保存到桌面
 def capture_screen():
@@ -407,10 +428,10 @@ def capture_screen():
         # 使用系统默认程序打开图片
         os.startfile(filepath)
 
-        return {"message":"截图保存成功","imagePath":filepath}
+        return Response.success("截图保存成功", filepath)
         
     except Exception as e:
-        return f"截图过程出错: {str(e)}"
+        return Response.failed(f"截图过程出错: {str(e)}")
 
 # 9.获取系统基本信息
 # 比如 CPU、内存使用情况。
@@ -454,21 +475,13 @@ def get_system_info() -> str:
                 continue
 
         # 格式化输出信息
-        system_info = f"""
-CPU信息:
-    核心数: {cpu_count}个
-    当前使用率: {cpu_percent}%
-    当前频率: {round(cpu_freq.current, 2)} MHz
-
-内存信息:
-    已用内存: {used_memory} GB
-    可用内存: {available_memory} GB
-    内存使用率: {memory_percent}%
-"""
-        return system_info
+        system_info = f"""CPU信息:核心数: {cpu_count}个,当前使用率: {cpu_percent}%,当前频率: {round(cpu_freq.current, 2)} MHz
+        内存信息:已用内存: {used_memory} GB,可用内存: {available_memory} GB,内存使用率: {memory_percent}%
+        """
+        return Response.success(system_info) 
 
     except Exception as e:
-        return f"获取系统信息时出错: {str(e)}"
+        return Response.failed(f"获取系统信息时出错: {str(e)}")
 
 # 10.打开/关闭摄像头,拍一张照片
 def control_camera() -> dict:
@@ -490,7 +503,7 @@ def control_camera() -> dict:
         cap = cv2.VideoCapture(0)
         
         if not cap.isOpened():
-            return {"message": "无法打开摄像头", "imagePath": ""}
+            return Response.failed("无法打开摄像头", "")
             
         # 等待摄像头预热
         import time
@@ -501,7 +514,7 @@ def control_camera() -> dict:
         
         if not ret:
             cap.release()
-            return {"message": "无法获取图像", "imagePath": ""}
+            return Response.failed("无法获取图像", "")
             
         # 生成文件名（使用时间戳）
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -513,11 +526,11 @@ def control_camera() -> dict:
         # 关闭摄像头
         cap.release()
         
-        return {"message": "拍照成功", "imagePath": image_path}
+        return Response.success("拍照成功", image_path)
             
             
     except Exception as e:
-        return {"message": f"操作摄像头时出错: {str(e)}", "imagePath": ""}
+        return Response.failed(f"操作摄像头时出错: {str(e)}")
 
 if __name__ == "__main__":
     # 1.测试控制音量函数

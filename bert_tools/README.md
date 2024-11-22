@@ -2,7 +2,10 @@
 1. 将数据集丢到`data_dir`文件夹下
 2. 将[预训练模型](https://hf-mirror.com/google-bert/bert-base-chinese)丢到`pretrain_models`文件夹,例如`bert_tools/pretrain_models/bert-base-chinese`
 3. 复用主项目的openvino虚拟环境
-4. 将`train.py`的main函数的is_train参数改成True(训练的时候用)
+4. (可选)执行train.py训练模型（训练好的模型：通过百度网盘分享的文件：Bert_tools 链接：https://pan.baidu.com/s/1OnpsSNmQ-CA5_VF8CdC-ig?pwd=mxj7 提取码：mxj7）
+```bash
+python train.py
+```
 
 ### 文件说明
 1. `train.py`训练模型用

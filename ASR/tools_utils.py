@@ -13,6 +13,7 @@
 10.打开/关闭摄像头,拍一张照片 (完成)
 11.获取当前音量大小 (完成)
 12.获取当前屏幕亮度大小 (完成)
+13.调用摄像头拍照，并把照片传给qwenV模型响应 (还缺本地的vLLM大模型接口)
 '''
 
 from ctypes import cast, POINTER
@@ -527,7 +528,7 @@ def control_camera() -> dict:
         # 保存图片
         cv2.imwrite(image_path, frame)
         
-        # 关闭摄像���
+        # 关闭摄像头
         cap.release()
         
         return Response.success("拍照成功", image_path)
@@ -580,6 +581,18 @@ def get_brightness():
     except Exception as e:
         return Response.failed(f"获取屏幕亮度时出错: {str(e)}")
 
+# 13.调用摄像头拍照，并把照片传给qwenV模型响应
+def camera_to_vLLM():
+    '''
+    能够获取相机拍照的照片，并传给vllm模型进行响应
+    :return: 返回多模态模型输出的文本信息
+    '''
+    # 1.获取照片
+    response = control_camera()
+    print(response["imagePath"])
+
+    # 2.将图片传给qwenV模型响应
+
 if __name__ == "__main__":
     # 1.测试控制音量函数
     #print(set_volume("100"))
@@ -617,12 +630,13 @@ if __name__ == "__main__":
     #print(control_camera())   # 打开摄像头并拍照
 
     # 11.测试获取当前音量函数
-    print(get_volume())
+    #print(get_volume())
 
     # 12.测试获取当前屏幕亮度大小
-    print(get_brightness())
+    #print(get_brightness())
 
-
+    # 13.
+    camera_to_vLLM()
 
 
 

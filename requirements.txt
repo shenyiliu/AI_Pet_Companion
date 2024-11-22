@@ -18,5 +18,9 @@ chromadb
 langchain-ollama
 langgraph
 langchain-chroma>=0.1.2
+<<<<<<< HEAD
 # bert_tools
 colored
+=======
+pygame
+>>>>>>> 30ca3e8c98d989531c21bac1a537ff7bcabd42f6

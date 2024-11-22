@@ -11,6 +11,9 @@
 9.获取系统基本信息  (完成)
 比如 CPU、内存使用情况。 (完成)
 10.打开/关闭摄像头,拍一张照片 (完成)
+11.获取当前音量大小 (完成)
+12.获取当前屏幕亮度大小 (完成)
+13.调用摄像头拍照，并把照片传给qwenV模型响应 (还缺本地的vLLM大模型接口)
 '''
 
 from ctypes import cast, POINTER
@@ -21,25 +24,27 @@ import os
 import sys
 
 class Response:
-    def __init__(self, status="success", message="", image_path=""):
+    def __init__(self, status="success", message="", image_path="", data=""):
         self.status = status
         self.message = message 
         self.image_path = image_path
+        self.data = data
 
     def to_dict(self):
         return {
             "status": self.status,
             "message": self.message,
-            "imagePath": self.image_path
+            "imagePath": self.image_path,
+            "data": self.data
         }
 
     @staticmethod
-    def success(message="", image_path=""):
-        return Response("success", message, image_path).to_dict()
+    def success(message="", image_path="", data=""):
+        return Response("success", message, image_path, data).to_dict()
 
     @staticmethod 
-    def failed(message="", image_path=""):
-        return Response("failed", message, image_path).to_dict()
+    def failed(message="", image_path="", data=""):
+        return Response("failed", message, image_path, data).to_dict()
 
 # 1.调整音量
 def set_volume(volume_level:str):
@@ -532,6 +537,62 @@ def control_camera() -> dict:
     except Exception as e:
         return Response.failed(f"操作摄像头时出错: {str(e)}")
 
+# 11.获取当前音量大小
+def get_volume():
+    """
+    获取 Windows 系统当前音量
+    :return: 包含音量信息的Response对象
+    """
+    try:
+        # 获取音频设备
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        
+        # 获取当前音量值(范围0.0-1.0)
+        current_volume = volume.GetMasterVolumeLevelScalar()
+        
+        # 将音量转换为0-100的整数
+        volume_percentage = int(round(current_volume * 100))
+        
+        return Response.success(f"当前系统音量为: {volume_percentage}%", data=volume_percentage)
+        
+    except Exception as e:
+        return Response.failed(f"获取音量时出错: {str(e)}")
+
+# 12.获取当前屏幕亮度大小
+def get_brightness():
+    """
+    获取 Windows 系统当前屏幕亮度
+    :return: 包含亮度信息的Response对象
+    """
+    try:
+        # 创建WMI接口
+        wmi_interface = wmi.WMI(namespace='wmi')
+        
+        # 获取亮度信息
+        brightness = wmi_interface.WmiMonitorBrightness()[0]
+        current_brightness = brightness.CurrentBrightness
+        
+        return Response.success(f"当前屏幕亮度为: {current_brightness}%", data=current_brightness)
+        
+    except IndexError:
+        return Response.failed("无法获取屏幕亮度信息，可能是当前设备不支持亮度调节")
+    except Exception as e:
+        return Response.failed(f"获取屏幕亮度时出错: {str(e)}")
+
+# 13.调用摄像头拍照，并把照片传给qwenV模型响应
+def camera_to_vLLM():
+    '''
+    能够获取相机拍照的照片，并传给vllm模型进行响应
+    :return: 返回多模态模型输出的文本信息
+    '''
+    # 1.获取照片
+    response = control_camera()
+    print(response["imagePath"])
+
+    # 2.将图片传给qwenV模型响应
+
 if __name__ == "__main__":
     # 1.测试控制音量函数
     #print(set_volume("100"))
@@ -566,9 +627,16 @@ if __name__ == "__main__":
     #print(get_system_info())
 
     # 10.测试控制摄像头开关并拍照
-    print(control_camera())   # 打开摄像头并拍照
+    #print(control_camera())   # 打开摄像头并拍照
 
+    # 11.测试获取当前音量函数
+    #print(get_volume())
 
+    # 12.测试获取当前屏幕亮度大小
+    #print(get_brightness())
+
+    # 13.
+    camera_to_vLLM()
 
 
 

@@ -200,6 +200,76 @@ def TTS_stream(context: str):
         p.terminate()
         tts_playing = False  # 播放结束
 
+# TTS openvoice API
+def TTS_play_audio_stream(context: str):
+    global tts_playing
+    tts_playing = True  # 开始播放TTS
+
+    import requests
+    import io
+    import pygame
+
+    # 发送POST请求到TTS接口
+    url = "http://127.0.0.1:5059/api/tts"
+    data = {
+        "prompt": context,
+        "speaker_id": "HuTao",
+        "language": "zh",
+        "style": "default"
+    }
+    
+    response = requests.post(url, json=data)
+    
+    # 将响应内容转换为字节流
+    audio_stream = io.BytesIO(response.content)
+    
+    # 初始化pygame混音器
+    pygame.mixer.init()
+    
+    # 加载并播放音频
+    pygame.mixer.music.load(audio_stream)
+    pygame.mixer.music.play()
+    
+    # 等待播放完成
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
+
+    tts_playing = False  # 播放结束    
+    # 清理
+    pygame.mixer.quit() 
+
+# 播放音频的函数
+def play_start_sound():
+    """播放启动提示音"""
+    try:
+        import pygame
+        
+        # 初始化pygame混音器
+        pygame.mixer.init()
+        
+        # 获取当前文件所在目录
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sound_path = os.path.join(current_dir, "start.wav")
+        
+        # 检查文件是否存在
+        if not os.path.exists(sound_path):
+            print("提示音文件不存在:", sound_path)
+            return
+            
+        # 加载并播放音频
+        pygame.mixer.music.load(sound_path)
+        pygame.mixer.music.play()
+        
+        # 等待播放完成
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
+            
+        # 清理
+        pygame.mixer.quit()
+        
+    except Exception as e:
+        print(f"播放提示音出错: {e}")
+
 def process_audio():
     """处理音频的独立线程函数"""
     global detected_wake_word, audio_queue, last_speech_time, is_recording
@@ -231,6 +301,7 @@ def process_audio():
                     
                     if check_wake_word(transcription):
                         print("检测到唤醒词！准备开始对话...")
+                        play_start_sound()
                         detected_wake_word = True
                         last_speech_time = time.time()
                         audio_queue.clear()  # 清空之前的音频
@@ -331,6 +402,7 @@ def process_tts_queue():
             if text:
                 # 执行TTS
                 TTS_stream(text)
+                #TTS_play_audio_stream(text)
                 # 标记任务完成
                 tts_queue.task_done()
         except Empty:

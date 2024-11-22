@@ -23,3 +23,5 @@ OpenVoice
 bert_tools/pretrain_models
 *.log
 my_tools/*.log
+download/torch_hub_local/*
+convert_Qwen2VL/Qwen2-VL-2B-Instruct/*

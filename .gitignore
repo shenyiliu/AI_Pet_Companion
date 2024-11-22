@@ -21,3 +21,5 @@ GPT-SoVITS-Inference
 output/
 OpenVoice
 download/torch_hub_local/*
+
+convert_Qwen2VL/Qwen2-VL-2B-Instruct/*

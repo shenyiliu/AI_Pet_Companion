@@ -1,0 +1,26 @@
+{
+    "intent2id": {
+        "AIRPLANE_MODE": 0,
+        "BATTERY": 1,
+        "BRIGHTNESS": 2,
+        "CALCULATOR": 3,
+        "POWER_SAVING_MODE": 4,
+        "SCREENSHOT": 5,
+        "SYSTEM_INFO": 6,
+        "TASK_MANAGER": 7,
+        "VIDEO_CHAT": 8,
+        "VOLUME": 9
+    },
+    "id2intent": {
+        "AIRPLANE_MODE": 0,
+        "BATTERY": 1,
+        "BRIGHTNESS": 2,
+        "CALCULATOR": 3,
+        "POWER_SAVING_MODE": 4,
+        "SCREENSHOT": 5,
+        "SYSTEM_INFO": 6,
+        "TASK_MANAGER": 7,
+        "VIDEO_CHAT": 8,
+        "VOLUME": 9
+    }
+}

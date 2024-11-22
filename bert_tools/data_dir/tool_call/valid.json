@@ -1,0 +1,1980 @@
+[
+    {
+        "text": "开飞行模式可以吗",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                1,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "能不能开启一下飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                3,
+                5,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "开启一下飞行模式吧",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "帮我开一下飞行模式好吗",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                2,
+                3,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "我要开一下飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                2,
+                3,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "请开启飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                1,
+                3,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "请帮忙开一下飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                3,
+                4,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "请把飞行模式打开",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                6,
+                8,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "开启飞行模式，可以吗",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "能不能打开飞行模式谢谢",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                3,
+                5,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "能开一下下飞行模式吗",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                1,
+                2,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "开飞行模式一下下吧",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                1,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "帮我开启飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                2,
+                4,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "请帮我开飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                3,
+                4,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "开一下飞行模式，可以吗",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                1,
+                "AIRPLANE_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "能关飞行模式吗",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                1,
+                2,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "我想关闭一下飞行模式谢谢",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                2,
+                4,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭一下飞行模式谢谢",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "把飞行模式关闭一下",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                5,
+                7,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "请关一下下飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                1,
+                2,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能关下飞行模式吗",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                1,
+                2,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "我想关一下飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                2,
+                3,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "请把飞行模式关掉",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                6,
+                8,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关一下飞行模式，麻烦了",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                1,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭飞行模式行不行",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "我要关关飞行模式",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                2,
+                4,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "飞行模式关一下",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                4,
+                5,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能关关飞行模式吗",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                2,
+                3,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关一下飞行模式吧",
+        "intent": "AIRPLANE_MODE",
+        "entity": [
+            [
+                0,
+                1,
+                "AIRPLANE_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能帮我看看电脑电池电量是多少？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "帮我查看电脑电池的电量。",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "帮我查一下电脑电池还剩多少电？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "请问电脑电池电量情况如何？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "电脑电池的电量显示是多少？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "电脑电池的电量现在是多少？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "帮我看看电脑电池的状态如何？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "帮我看看电脑电池现在还有多少电？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "电脑电池电量目前还剩多少？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "帮我看看电脑电池还剩多少电？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "电脑电池电量剩余多少？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "请告诉我电脑电池的电量情况。",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "请帮我查看一下电脑电池电量。",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "帮我检查电脑电池的电量显示。",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "能帮我查看一下电脑电池电量？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "请告诉我电脑电池还剩多少电？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "请帮我查看电脑电池还剩多少电量。",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "帮我检查一下电脑电池的电量。",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "能帮我看看电脑电池的电量状态？",
+        "intent": "BATTERY",
+        "entity": []
+    },
+    {
+        "text": "调到5%亮度",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                0,
+                4,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：调整下亮度\n助手：您想调到多少亮度呢？\n用户：调到50%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                26,
+                31,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "亮度调到65%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                2,
+                7,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：调整亮度\n助手：您要调大还是调小？\n用户：调到10%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                24,
+                29,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：亮度不够\n助手：您需要调亮吗？\n用户：调亮到85%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                22,
+                28,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：屏幕太暗\n助手：您想调亮到多少？\n用户：调到85%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                23,
+                28,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：调整下亮度\n助手：您希望调到多少亮度？\n用户：调到35%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                26,
+                31,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "调到55%亮度",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                0,
+                5,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "调到25%亮度",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                0,
+                5,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：调整亮度\n助手：您要调大还是调小？\n用户：调到30%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                24,
+                29,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：亮度不舒服\n助手：您想调到多少亮度呢？\n用户：调到35%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                26,
+                31,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：屏幕太亮了\n助手：需要调暗一些吗？\n用户：是的，调到30%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                27,
+                32,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：屏幕太亮了\n助手：您需要调暗一些吗？\n用户：是的，调到30%",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                28,
+                33,
+                "BRIGHTNESS/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：屏幕太亮了\n助手：您想调暗一些吗？\n用户：是的，调大一些",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                27,
+                31,
+                "BRIGHTNESS/Add"
+            ]
+        ]
+    },
+    {
+        "text": "用户：亮度不够\n助手：您要调亮一些吗？\n用户：调大一点",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                23,
+                27,
+                "BRIGHTNESS/Add"
+            ]
+        ]
+    },
+    {
+        "text": "用户：亮度不够\n助手：您要调亮一些吗？\n用户：调大一些",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                23,
+                27,
+                "BRIGHTNESS/Add"
+            ]
+        ]
+    },
+    {
+        "text": "再暗一些",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                1,
+                4,
+                "BRIGHTNESS/Sub"
+            ]
+        ]
+    },
+    {
+        "text": "用户：屏幕太亮\n助手：您想调暗一些吗？\n用户：调小一些",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                23,
+                27,
+                "BRIGHTNESS/Sub"
+            ]
+        ]
+    },
+    {
+        "text": "稍微调暗一点",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                2,
+                6,
+                "BRIGHTNESS/Sub"
+            ]
+        ]
+    },
+    {
+        "text": "用户：屏幕太亮了\n助手：您需要调暗一些吗？\n用户：调小亮度",
+        "intent": "BRIGHTNESS",
+        "entity": [
+            [
+                25,
+                29,
+                "BRIGHTNESS/Sub"
+            ]
+        ]
+    },
+    {
+        "text": "关闭电脑的计算器",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "请帮我关闭电脑上的计算器",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                3,
+                5,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能帮我关闭电脑计算器吗",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                3,
+                5,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能否关闭计算器？",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                2,
+                4,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭计算器不用计算了",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭计算器",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "我不用计算器了，关闭",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                8,
+                10,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭计算器吧",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能不能现在关闭计算器？",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                5,
+                7,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭计算器吧快点",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭一下计算器不用了",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能关闭计算器吗",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                1,
+                3,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "立即关闭计算器不用了",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                2,
+                4,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能否帮我关闭计算器？",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                4,
+                6,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能帮我关闭一下计算器吗",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                3,
+                5,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭计算器好吗谢谢",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "请现在关闭一下计算器",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                3,
+                5,
+                "CALCULATOR/Off"
+            ]
+        ]
+    },
+    {
+        "text": "打开计算器应用，谢谢",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "能否帮我开启计算器？",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                4,
+                6,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "能不能开启计算器我需要",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                3,
+                5,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开计算器，急用啊",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "请打开计算器谢谢我需要",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                1,
+                3,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "我需要使用计算器，打开一下",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                9,
+                11,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开计算器，我需要用",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "我需要立即打开计算器",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                5,
+                7,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开计算器应用",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "请快速打开计算器",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                3,
+                5,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "我要使用计算器，打开一下谢谢",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                8,
+                10,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "我想打开计算器用",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                2,
+                4,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开计算器，我需要做些计算",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "请现在打开一下计算器",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                3,
+                5,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开计算器，谢谢啦",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                0,
+                2,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "能帮我打开电脑计算器吗",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                3,
+                5,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "能否打开一下计算器？",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                2,
+                4,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "我要打开这个计算器",
+        "intent": "CALCULATOR",
+        "entity": [
+            [
+                2,
+                4,
+                "CALCULATOR/On"
+            ]
+        ]
+    },
+    {
+        "text": "我需要开启省电模式",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                3,
+                5,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开一下省电模式，好吗",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开省电模式，电量告急",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "能不能开启省电模式啊",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                3,
+                5,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "我想开一下省电模式",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                2,
+                3,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "请打开省电模式，谢谢",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                1,
+                3,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开省电模式，延长使用时间",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "我要开启省电模式",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                2,
+                4,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开省电模式，可以吗",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "开启省电模式，节约电量",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "请开下省电模式",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                1,
+                2,
+                "POWER_SAVING_MODE/On"
+            ]
+        ]
+    },
+    {
+        "text": "能不能关闭省电模式啊",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                3,
+                5,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭省电模式，我要玩大型游戏。",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "我要关闭省电功能",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                2,
+                4,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "能关闭省电模式吗",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                1,
+                3,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭省电模式，玩游戏",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关个省电模式，谢谢",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                1,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "请关闭一下省电模式",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                1,
+                3,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭省电模式，现在不需要",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "请把省电模式关掉",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                6,
+                8,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭省电模式，我要看高清视频。",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭一下省电模式，好吗",
+        "intent": "POWER_SAVING_MODE",
+        "entity": [
+            [
+                0,
+                2,
+                "POWER_SAVING_MODE/Off"
+            ]
+        ]
+    },
+    {
+        "text": "请截图当前界面。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "请执行屏幕画面截图。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "执行屏幕画面捕获。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "请执行屏幕捕获。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "截图当前显示界面。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "捕获屏幕图像。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "捕获当前工作区。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "截图当前窗口。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "进行屏幕状态截取。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "请截取当前画面。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "请截图当前屏幕状态。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "截图当前工作区。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "请捕获当前屏幕内容。",
+        "intent": "SCREENSHOT",
+        "entity": []
+    },
+    {
+        "text": "获取当前系统内存使用率和内存可用量。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "查看当前CPU使用率和频率。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "查询内存使用情况和CPU核心数。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "获取内存使用情况和可用内存。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "显示CPU核心数和内存使用率。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "查询系统CPU频率和内存状态。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "获取当前系统CPU核心数和内存使用率。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "查看系统内存详细信息。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "查询当前系统内存使用率和内存可用量。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "获取当前系统CPU频率和内存使用情况。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "获取当前系统内存使用率和CPU频率。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "获取当前系统CPU核心数和内存使用情况。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "获取当前系统CPU频率和内存使用率。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "获取CPU当前使用率和内存信息。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "获取内存已用和可用量。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "获取当前系统内存使用率。",
+        "intent": "SYSTEM_INFO",
+        "entity": []
+    },
+    {
+        "text": "我想打开任务管理器",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                2,
+                4,
+                "TASK_MANAGER/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开任务管理器，我需要看看",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                0,
+                2,
+                "TASK_MANAGER/On"
+            ]
+        ]
+    },
+    {
+        "text": "帮我打开任务管理器",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                2,
+                4,
+                "TASK_MANAGER/On"
+            ]
+        ]
+    },
+    {
+        "text": "能否帮我打开任务管理器？",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                4,
+                6,
+                "TASK_MANAGER/On"
+            ]
+        ]
+    },
+    {
+        "text": "打开任务管理器，我要用",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                0,
+                2,
+                "TASK_MANAGER/On"
+            ]
+        ]
+    },
+    {
+        "text": "关闭任务管理器，不用了",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                0,
+                2,
+                "TASK_MANAGER/Off"
+            ]
+        ]
+    },
+    {
+        "text": "任务管理器关掉，谢谢",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                5,
+                7,
+                "TASK_MANAGER/Off"
+            ]
+        ]
+    },
+    {
+        "text": "现在关闭任务管理器",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                2,
+                4,
+                "TASK_MANAGER/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭任务管理器谢谢",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                0,
+                2,
+                "TASK_MANAGER/Off"
+            ]
+        ]
+    },
+    {
+        "text": "关闭任务管理器吧",
+        "intent": "TASK_MANAGER",
+        "entity": [
+            [
+                0,
+                2,
+                "TASK_MANAGER/Off"
+            ]
+        ]
+    },
+    {
+        "text": "结束AI视频通话连接。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Close"
+            ]
+        ]
+    },
+    {
+        "text": "停止AI视频通话会话。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Close"
+            ]
+        ]
+    },
+    {
+        "text": "关闭AI视频通话界面。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Close"
+            ]
+        ]
+    },
+    {
+        "text": "关闭AI视频通话应用。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Close"
+            ]
+        ]
+    },
+    {
+        "text": "关闭AI视频通话系统。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Close"
+            ]
+        ]
+    },
+    {
+        "text": "开启AI视频通话会话。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Open"
+            ]
+        ]
+    },
+    {
+        "text": "打开AI视频通话连接。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Open"
+            ]
+        ]
+    },
+    {
+        "text": "打开AI视频通话设备。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Open"
+            ]
+        ]
+    },
+    {
+        "text": "启动AI视频通话界面。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Open"
+            ]
+        ]
+    },
+    {
+        "text": "打开AI视频通话选项。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Open"
+            ]
+        ]
+    },
+    {
+        "text": "打开AI视频通话应用。",
+        "intent": "VIDEO_CHAT",
+        "entity": [
+            [
+                0,
+                2,
+                "VIDEO_CHAT/Open"
+            ]
+        ]
+    },
+    {
+        "text": "用户：调整音量\n助手：您想调到多少？\n用户：调到10%",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                22,
+                27,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "将音量设置为40%。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                3,
+                9,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "请将音量调至80%。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                4,
+                9,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：调到20%",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                3,
+                8,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "将音量调至70%。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                3,
+                8,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：调整一下音量\n助手：您要调大还是调小？\n用户：调到75%",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                26,
+                31,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：调整一下音量\n助手：您要调大还是调小？\n用户：调到60%",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                26,
+                31,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "能把音量降到30%吗？",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                4,
+                9,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "扬声器音量调到5%。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                5,
+                9,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：我想调整音量\n助手：您想调到多少百分比？\n用户：调到70%",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                27,
+                32,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "将音量调至50%。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                3,
+                8,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "用户：我想调整音量\n助手：您想调到多少百分比？\n用户：调到90%",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                27,
+                32,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "把音量调到60%。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                3,
+                8,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "请把音量调到10%。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                4,
+                9,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "把音量调到50%吧。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                3,
+                8,
+                "VOLUME/To"
+            ]
+        ]
+    },
+    {
+        "text": "关闭一下扬声器。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                0,
+                2,
+                "VOLUME/Close"
+            ]
+        ]
+    },
+    {
+        "text": "关闭声音。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                0,
+                2,
+                "VOLUME/Close"
+            ]
+        ]
+    },
+    {
+        "text": "用户：能关掉声音吗？\n助手：好的，立即关闭\n用户：谢谢",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                4,
+                8,
+                "VOLUME/Close"
+            ]
+        ]
+    },
+    {
+        "text": "用户：能关掉声音吗？\n助手：当然，马上为您关闭\n用户：好的",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                4,
+                8,
+                "VOLUME/Close"
+            ]
+        ]
+    },
+    {
+        "text": "扬声器关了吧。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                3,
+                6,
+                "VOLUME/Close"
+            ]
+        ]
+    },
+    {
+        "text": "关闭声音，我需要专心。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                0,
+                4,
+                "VOLUME/Close"
+            ]
+        ]
+    },
+    {
+        "text": "用户：音量不够大\n助手：需要调大一些吗？\n用户：调大一些",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                24,
+                28,
+                "VOLUME/Add"
+            ]
+        ]
+    },
+    {
+        "text": "声音再大一点，谢谢。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                2,
+                6,
+                "VOLUME/Add"
+            ]
+        ]
+    },
+    {
+        "text": "用户：音量太低了\n助手：您需要调大一些吗？\n用户：调大一些",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                25,
+                29,
+                "VOLUME/Add"
+            ]
+        ]
+    },
+    {
+        "text": "音量稍微调小。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                4,
+                6,
+                "VOLUME/Sub"
+            ]
+        ]
+    },
+    {
+        "text": "声音再小一些，谢谢。",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                2,
+                6,
+                "VOLUME/Sub"
+            ]
+        ]
+    },
+    {
+        "text": "能把声音调小一点吗？",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                4,
+                8,
+                "VOLUME/Sub"
+            ]
+        ]
+    },
+    {
+        "text": "助手：您想调小一些吗？",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                5,
+                9,
+                "VOLUME/Sub"
+            ]
+        ]
+    },
+    {
+        "text": "用户：声音太响了",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                5,
+                8,
+                "VOLUME/Sub"
+            ]
+        ]
+    },
+    {
+        "text": "用户：声音太响了",
+        "intent": "VOLUME",
+        "entity": [
+            [
+                5,
+                8,
+                "VOLUME/Sub"
+            ]
+        ]
+    }
+]

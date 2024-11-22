@@ -20,3 +20,6 @@ download/
 GPT-SoVITS-Inference
 output/
 OpenVoice
+bert_tools/pretrain_models
+*.log
+my_tools/*.log

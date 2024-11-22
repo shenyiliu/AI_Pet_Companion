@@ -1,0 +1,61 @@
+# 根目录文件夹配置
+dir_info:
+  # 数据地址
+  data_dir: "data_dir"
+  # 预处理模型地址
+  pre_model_dir: "pretrain_models"
+  # 输出模型地址
+  out_model: "out_model"
+  # 输出日志地址
+  out_log: "out_log"
+# 数据集名称（注：所有数据集均存在data_dir下面）
+dataset_name: "tool_call"
+# 预训练模型名称（注：预训练模型均放在pretrain_models下面
+pre_model_name: "bert-base-chinese"
+
+# 模型配置信息
+model_info:
+  # 设置随机种子
+  seed: 2020
+  # GPU id
+  device_id: 0
+  # epoch nums
+  epoch: 100
+  # 是否开启多GPU
+  multi_gpu: false
+  # 是否从某个文件恢复训练
+  restore_file: null
+  # 批处理数据大小
+  train_batch_size: 64
+  valid_batch_size: 64
+  test_batch_size: 64
+  # 最大序列长度
+  max_seq_len: 128
+  # 学习率
+  fine_tuning_lr: 0.00001
+  down_entity_lr: 0.0001
+  # 最大梯度
+  clip_grad: 2.0
+  # dropout概率
+  dropout_prob: 0.3
+  # weight decay系数
+  weight_decay_rate: 0.1
+  # warmup比例
+  warmup_prob: 0.1
+  # 梯度累计数量，节省显存
+  gradient_acc_steps: 2
+  # -- 提前停止训练设置 -- #
+  # 至少训练次数
+  min_epoch_num: 15
+  # 耐心等待次数
+  patience_num: 10
+  # 每次最小提升率，低于这个等于没什么用
+  patience_rate: 0.0001
+  # 是否使用稀疏矩阵优化算法，需要开启int8优化
+  use_sparse: false
+  use_fp16: true
+
+
+
+
+

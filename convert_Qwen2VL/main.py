@@ -21,13 +21,17 @@ if processor.chat_template is None:
     processor.chat_template = tok.chat_template
 
 example_image_url = "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
-example_image_path = Path("demo.jpeg")
+
+image_path = "./demo.jpeg"
+image_path = "D:\GitHub\AI_Pet_Companion\ASR\image\camera_20241122_163055.jpg"
+
+example_image_path = Path(image_path)
 
 if not example_image_path.exists():
     Image.open(requests.get(example_image_url, stream=True).raw).save(example_image_path)
 
 image = Image.open(example_image_path)
-question = "描述这张图片"
+question = "描述一下图片内容，如果有人物，单独描述人物的表情和外貌特征，不要描述背景。"
 
 messages = [
     {
@@ -76,7 +80,7 @@ class PerformanceStreamer(TextStreamer):
         super().put(value)
 
 streamer = PerformanceStreamer(processor.tokenizer, skip_special_tokens=True)
-generated_ids = model.generate(**inputs, max_new_tokens=100, streamer=streamer)
+generated_ids = model.generate(**inputs, max_new_tokens=60, streamer=streamer)
 
 end_time = time.time()
 total_time = end_time - start_time

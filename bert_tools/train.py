@@ -118,7 +118,7 @@ def evaluate(model1, device1, valid_load1, is_predict=False):
                     torch.zeros(intent_logits.size(), device=device1)
                 )
                 intent_pred = torch.zeros(intent_logits.size(0), device=device1)
-                # 用-100 标记该样本为负样本，也就是不属于学术要求
+                # 用-100 标记该样本为负样本
                 # 如果没有对应实体或者分数阀值较低，则认为是负样本，也就是非学术要求
                 negative_data = torch.tensor([-100], device=device1)
                 for idx, sample in enumerate(intent_pred_one_hot):

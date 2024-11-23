@@ -1,9 +1,7 @@
 import os.path
 import re
 import torch
-import numpy as np
 from torch.utils.data import DataLoader, SequentialSampler
-from transformers import BertConfig
 from my_tools.utils import load_checkpoint
 from my_tools.data_load import MyDataLoad, MyDataSet
 # from my_tools.model3 import DIETClassifier
@@ -82,7 +80,7 @@ class Predict(MyDataLoad):
                 else:
                     num = int(str1)
                 return num
-            except Exception as err:
+            except Exception:
                 return None
     
     def evaluate(self, valid_load1, threshold: float=0.8):
@@ -97,6 +95,7 @@ class Predict(MyDataLoad):
         id2entity = params.id2entity
         # eval_metric = SpanEntityScore(id2entity)
         intent_pred_list = []  # 收集意图预测结果
+        probability_pred_list = [] # 收集意图预测概率
         entity_pred_info_list = []  # 收集实体最终预测结果
         # 取消打印进度条显示
         for data in valid_load1:
@@ -146,27 +145,19 @@ class Predict(MyDataLoad):
                 # -- 收集意图信息 -- #
                 # 如果是训练或者验证集，直接argmax,取所有最高分
                 # 如果用阀值的话，可能变成多分类问题, 暂时只考虑单分类即可
-                intent_logits = torch.squeeze(intent_logits, dim=-1)
-                intent_pred_one_hot = torch.where(
-                    torch.sigmoid(intent_logits) > threshold,
-                    torch.ones(intent_logits.size(), device=self.device),
-                    torch.zeros(intent_logits.size(), device=self.device)
-                )
-                intent_pred = torch.zeros(intent_logits.size(0), device=self.device)
-                # 用-100 标记该样本为负样本
-                # 如果没有对应实体或者分数阀值较低，则认为是负样本，也就是非学术要求
-                negative_data = torch.tensor([-100], device=self.device)
-                for idx, sample in enumerate(intent_pred_one_hot):
-                    if 1 not in sample or len(entity_pred_list[idx]) == 0:
-                        sample = negative_data
-                    else:
-                        sample = torch.argmax(intent_logits[idx])
-                    intent_pred[idx] = sample
-                intent_pred = intent_pred.detach().cpu().numpy()
-                # 收集意图预测值
-                intent_pred_list.extend(intent_pred.astype(np.int32).tolist())
+                intent_logits = torch.squeeze(intent_logits, dim=1)
+                probabilities =  torch.softmax(intent_logits, dim=1)
+                for i in range(intent_logits.size(0)):
+                    probability_tensor = probabilities[i]
+                    max_id = torch.argmax(probability_tensor).item()
+                    probability = torch.max(probability_tensor).item()
+                    if probability < threshold:
+                        max_id = -100
+                    intent_pred_list.append(max_id)
+                    probability_pred_list.append(probability)
         return {
             "intent_pred": intent_pred_list,
+            "probability_pred": probability_pred_list,
             "entity_pred": entity_pred_info_list,
         }
     
@@ -266,9 +257,12 @@ class Predict(MyDataLoad):
         )
         intent_list = label_result["intent_pred"]
         entity_list = label_result["entity_pred"]
-        message = ""
+        entity_prob_list = label_result["probability_pred"]
         result_list = []
-        for (intent_id, temp_entity_list, text) in zip(intent_list, entity_list, text_list):
+        for (intent_id, temp_entity_list, text, probability) in zip(
+            intent_list, entity_list, text_list, entity_prob_list
+        ):
+            message = ""
             intent_name = params.id2intent.get(intent_id, None)
             if len(temp_entity_list) > 0:
                 entity_dict = temp_entity_list[0]
@@ -284,13 +278,22 @@ class Predict(MyDataLoad):
                     data = self.map_task("", intent_name, "")  
                 # 如果是双参数的意图，可以进一步询问
                 elif intent_name in {"VOLUME", "BRIGHTNESS"}:
-                    message = "请问您要调到多大呢？"
-                    data = {}
+                    if "最大" in text or "最高" in text:
+                        data = {"func": "set_volume", "args": {"action": None, "value": 100}}
+                    elif "最小" in text or "最低" in text:
+                        data = {"func": "set_volume", "args": {"action": None, "value": 0}}
+                    elif "大" in text:
+                        data = {"func": "set_volume", "args": {"action": "+", "value": 10}}
+                    elif "小" in text:
+                        data = {"func": "set_volume", "args": {"action": "-", "value": 10}}
+                    else:
+                        message = "请问您要调到多大呢？"
+                        data = {}
                 # 如果是单参数的意图
                 else:
                     message = "请问您是要打开还是关闭呢？"
                     data = {}
-            temp_dict = {"data": data, "message": message}
+            temp_dict = {"data": data, "message": message, "probability": round(probability, 4)}
             result_list.append(temp_dict)
         return result_list
 
@@ -307,7 +310,8 @@ if __name__ == '__main__':
     text_list1 = [
         "帮我打开任务管理器",
         "你好",
-        "让我们开始AI视频聊天吧"
+        "让我们开始AI视频聊天吧",
+        "音量调的小一点"
     ]
     et = time.time()
     result_data2 = predict.predict(text_list1)

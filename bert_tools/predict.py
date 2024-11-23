@@ -232,7 +232,7 @@ class Predict(MyDataLoad):
             exe_func = self.intent2task[intent_name]["fun"]
             return {"func": exe_func, "args": {}}
         # 对于单参数意图
-        elif intent_name in intent2task:
+        elif intent_name in self.intent2task:
             exe_func = self.intent2task[intent_name]["fun"]
             entity_dict = self.intent2task[intent_name]["entity"]
             value = entity_dict[entity_action]

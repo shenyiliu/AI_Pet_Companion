@@ -1,53 +1,53 @@
 import requests
 import json
 from typing import List, Dict, Any
-import tools_utils as tools
+import tools_utils as tu
 
 # 定义工具函数映射表
 TOOL_MAP = {
     # 开关类工具: 直接使用布尔值参数
     "control_calculator": {
-        "func": tools.control_calculator,
+        "func": tu.control_calculator,
         "process_arg": lambda x: x  # 直接返回参数值，或者直接设为 None
     },
     "set_power_mode": {
-        "func": tools.set_power_mode,
+        "func": tu.set_power_mode,
         "process_arg": lambda x: x   # 不需要处理参数
     },
     "set_airplane_mode": {
-        "func": tools.set_airplane_mode,
+        "func": tu.set_airplane_mode,
         "process_arg": lambda x: x 
     },
     "control_task_manager": {
-        "func": tools.control_task_manager,
+        "func": tu.control_task_manager,
         "process_arg": lambda x: x 
     },
     "control_camera": {
-        "func": tools.control_camera,
+        "func": tu.control_camera,
         "process_arg": lambda x: x 
     },
     "camera_to_vLLM": {
-        "func": tools.camera_to_vLLM,
+        "func": tu.camera_to_vLLM,
         "process_arg": lambda x: x 
     },
     
     # 数值类工具: 需要int类型参数
     "set_volume": {
-        "func": tools.set_volume,
+        "func": tu.set_volume,
         "process_arg": int
     },
     "set_brightness": {
-        "func": tools.set_brightness,
+        "func": tu.set_brightness,
         "process_arg": int
     },
     
     # 无参数工具
     "capture_screen": {
-        "func": tools.capture_screen,
+        "func": tu.capture_screen,
         "process_arg": None
     },
     "get_system_info": {
-        "func": tools.get_system_info,
+        "func": tu.get_system_info,
         "process_arg": None
     }
 }
@@ -129,57 +129,76 @@ def classify_tool(text_list: List[str], threshold: float = 0.8) -> Dict[str, Any
         print(f"JSON解析错误: {e}")
         return None
 
-# 使用示例
-if __name__ == "__main__":
+
+# BERT意图识别进行工具调用
+def BERT_tool_call(current_transcription:str):
     '''
-    这里添加标准对话测试
-    
-    
+    1.意图识别
+    2.工具调用
     '''
-    # 测试函数
-    text_list = ["请你帮我音量调整小一些"]
+    text_list = [current_transcription]
+
     result = classify_tool(text_list)
     
     if result:
         print("请求成功!")
         print(f"处理时间: {result['during']}秒")
 
-        # 1.解析工具名称、参数和消息
+        # 1.解析工具名称
         tool_name = result['data'][0]['data']['func']
         if tool_name is not None:
-            tool_args_action = result['data'][0]['data']['args']['action']
-            tool_args_value = result['data'][0]['data']['args']['value']
+            # 安全地获取参数
+            tool_args = result['data'][0]['data']['args']
             tool_message = result['data'][0]['message']
             
             print(f"工具名称: {tool_name}")
-            print(f"工具参数: action: {tool_args_action} value: {tool_args_value}")
+            print(f"工具参数: {tool_args}")
             print(f"工具消息: {tool_message}")
 
-            # 控制加减亮度/屏幕
-            if tool_args_action is not None:
+            # 只有在需要action的工具才处理action
+            if 'action' in tool_args and tool_args['action'] is not None:
                 num = 0
                 # 判断获取音量还是获取亮度
                 if tool_name == "set_brightness":
-                    num = tools.get_brightness()["data"]
-                
-                if tool_name == "set_volume":
-                    num = tools.get_volume()["data"]
+                    num = tu.get_brightness()["data"]
+                elif tool_name == "set_volume":
+                    num = tu.get_volume()["data"]
 
-                if tool_args_action == "+":
+                if tool_args['action'] == "+":
                     num += 10
-                elif tool_args_action == "-":
+                elif tool_args['action'] == "-":
                     num -= 10
 
                 tool_result = execute_tool(tool_name, num)
             else:
-                # 2.执行工具
-                tool_result = execute_tool(tool_name, tool_args_value)
+                # 对于不需要action的工具，直接使用value参数（如果有的话）
+                tool_value = tool_args.get('value', None)
+                tool_result = execute_tool(tool_name, tool_value)
 
             status = tool_result['status']
+            response_message = ""
             if status == "success":
                 response_message = tool_result['message']
                 print(f"工具执行结果: {response_message}")
             else:
-                print(f"工具执行失败: {tool_result}")
+                response_message = tool_result['message']
+                print(f"工具执行失败: {response_message}")
+            
+            return response_message
         else:
             print("工具名称不存在")
+            return None
+
+
+# 使用示例
+if __name__ == "__main__":
+    '''
+    这里添加标准对话测试
+    
+    1.帮我把屏幕亮度/声音调大一些
+    2.
+
+    帮我查询一下当前的内存信息
+    '''
+    # 测试函数
+    BERT_tool_call("帮我把屏幕亮度调大一些")

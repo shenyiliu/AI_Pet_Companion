@@ -20,7 +20,8 @@ from typing import Dict
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue, Empty
 from collections import deque
-
+import bert_utils as bu
+import tools_utils as tu
 # 设置日志级别，看更多细节
 logging.basicConfig(level=logging.DEBUG)
 
@@ -344,6 +345,67 @@ def process_audio():
     
     # 返回所有对话的转录结果
     return all_transcriptions
+
+# BERT意图识别进行工具调用
+def BERT_tool_call(current_transcription:str):
+    '''
+    1.意图识别
+    2.工具调用
+    '''
+    text_list = [current_transcription]
+
+    result = bu.classify_tool(text_list)
+    
+    if result:
+        print("请求成功!")
+        print(f"处理时间: {result['during']}秒")
+
+        # 1.解析工具名称
+        tool_name = result['data'][0]['data']['func']
+        if tool_name is not None:
+            # 安全地获取参数
+            tool_args = result['data'][0]['data']['args']
+            tool_message = result['data'][0]['message']
+            
+            print(f"工具名称: {tool_name}")
+            print(f"工具参数: {tool_args}")
+            print(f"工具消息: {tool_message}")
+
+            # 只有在需要action的工具才处理action
+            if 'action' in tool_args and tool_args['action'] is not None:
+                num = 0
+                # 判断获取音量还是获取亮度
+                if tool_name == "set_brightness":
+                    num = tu.get_brightness()["data"]
+                elif tool_name == "set_volume":
+                    num = tu.get_volume()["data"]
+
+                if tool_args['action'] == "+":
+                    num += 10
+                elif tool_args['action'] == "-":
+                    num -= 10
+
+                tool_result = bu.execute_tool(tool_name, num)
+            else:
+                # 对于不需要action的工具，直接使用value参数（如果有的话）
+                tool_value = tool_args.get('value', None)
+                tool_result = bu.execute_tool(tool_name, tool_value)
+
+            status = tool_result['status']
+            response_message = ""
+            if status == "success":
+                response_message = tool_result['message']
+                print(f"工具执行结果: {response_message}")
+            else:
+                response_message = tool_result['message']
+                print(f"工具执行失败: {response_message}")
+            
+            return response_message
+        else:
+            print("工具名称不存在")
+            return None
+
+
 
 
 def Mem0_LLM_TTS(current_transcription:str, user_id:str):

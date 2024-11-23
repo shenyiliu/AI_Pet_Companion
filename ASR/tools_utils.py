@@ -462,7 +462,7 @@ def get_system_info() -> str:
         return Response.failed(f"获取系统信息时出错: {str(e)}")
 
 # 10.打开/关闭摄像头,拍一张照片
-def control_camera(enable: str) -> dict:
+def control_camera(enable: bool) -> dict:
     """
     控制摄像头开关并拍照
     :param enable: "True" 打开摄像头，"False" 关闭摄像头
@@ -480,7 +480,7 @@ def control_camera(enable: str) -> dict:
             os.makedirs(image_dir)
         
         # 如果是关闭命令，关闭摄像头并返回
-        if enable.lower() == "false":
+        if not enable:
             if _camera is not None:
                 _camera.release()
                 _camera = None
@@ -513,7 +513,7 @@ def control_camera(enable: str) -> dict:
             
     except Exception as e:
         # 只在发生异常且是关闭命令时释放摄像头
-        if _camera is not None and enable.lower() == "false":
+        if _camera is not None and enable:
             _camera.release()
             _camera = None
         return Response.failed(f"操作摄像头时出错: {str(e)}")
@@ -569,9 +569,9 @@ def camera_to_vLLM(enable: bool):
     :param enable: "True" 打开摄像头并拍照, "False" 关闭摄像头
     :return: 返回多模态模型输出的文本信息
     '''
-    if enable.lower() == "true":
+    if enable:
         # 1.获取照片，但不关闭摄像头
-        response = control_camera("True")
+        response = control_camera(enable)
         print(response["imagePath"])
         
         # 2.将图片传给qwenV模型响应
@@ -579,7 +579,7 @@ def camera_to_vLLM(enable: bool):
         
     else:
         # 关闭摄像头
-        response = control_camera("False")
+        response = control_camera(enable)
         print("摄像头已关闭")
 
 
@@ -588,30 +588,30 @@ def camera_to_vLLM(enable: bool):
 
 if __name__ == "__main__":
     # 1.测试控制音量函数
-    #print(set_volume("100"))
+    #print(set_volume(100))
     
     # 2.测试控制亮度函数
-    #print(set_brightness("75"))
+    #print(set_brightness(70))
     
     # 3.测试电池状态检测函数
     # battery_info = check_battery_status()
     # print(battery_info)
     
     # 4.测试省电模式控制函数
-    #print(set_power_mode("True"))   # 开启省电模式
-    #print(set_power_mode("False"))  # 关闭省电模式
+    #print(set_power_mode(True))   # 开启省电模式
+    #print(set_power_mode(False))  # 关闭省电模式
 
     # 5.测试飞行模式控制函数
-    #print(set_airplane_mode("True"))   # 开启飞行模式
-    #print(set_airplane_mode("False"))  # 关闭飞行模式
+    #print(set_airplane_mode(True))   # 开启飞行模式
+    #print(set_airplane_mode(False))  # 关闭飞行模式
 
     # 6.测试打开/关闭计算器
-    #print(control_calculator("True"))   # 打开计算器
-    #print(control_calculator("False"))  # 关闭计算器
+    #print(control_calculator(True))   # 打开计算器
+    #print(control_calculator(False))  # 关闭计算器
     
     # 7.测试打开/关闭任务管理器
-    #print(control_task_manager("True"))   # 打开任务管理器
-    #print(control_task_manager("False"))  # 关闭任务管理器
+    #print(control_task_manager(True))   # 打开任务管理器
+    #print(control_task_manager(False))  # 关闭任务管理器
 
     # 8.测试截图功能
     #print(capture_screen())

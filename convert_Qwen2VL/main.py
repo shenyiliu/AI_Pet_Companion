@@ -1,34 +1,41 @@
+import os
 from ov_qwen2_vl import OVQwen2VLModel
-
-model_dir = "./Qwen2-VL-2B-Instruct"
-model = OVQwen2VLModel(model_dir, "GPU")
-
-
 from PIL import Image
 from pathlib import Path
 from transformers import AutoProcessor, AutoTokenizer
 from qwen_vl_utils import process_vision_info
 from transformers import TextStreamer
-import requests
+# import requests
 import time
+
+
+pt_model_id = "Qwen2-VL-2B-Instruct"
+now_dir = os.path.dirname(os.path.abspath(__file__))
+project_dir = os.path.dirname(now_dir)
+download_dir = os.path.join(project_dir, "download")
+output_dir = os.path.join(project_dir, "output")
+pt_model_dir = os.path.join(download_dir, pt_model_id)
+ov_model_dir = os.path.join(output_dir, "Qwen2-VL-2B-Instruct-ov")
+ov_model = OVQwen2VLModel(ov_model_dir, device="AUTO")
+
 
 min_pixels = 256 * 28 * 28
 max_pixels = 1280 * 28 * 28
-processor = AutoProcessor.from_pretrained(model_dir, min_pixels=min_pixels, max_pixels=max_pixels)
+processor = AutoProcessor.from_pretrained(pt_model_dir, min_pixels=min_pixels, max_pixels=max_pixels)
 
 if processor.chat_template is None:
-    tok = AutoTokenizer.from_pretrained(model_dir)
-    processor.chat_template = tok.chat_template
+    tokenizer = AutoTokenizer.from_pretrained(pt_model_dir)
+    processor.chat_template = tokenizer.chat_template
 
 example_image_url = "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
 
 image_path = "./demo.jpeg"
-image_path = "D:\GitHub\AI_Pet_Companion\ASR\image\camera_20241122_163055.jpg"
+# image_path = "D:\GitHub\AI_Pet_Companion\ASR\image\camera_20241122_163055.jpg"
 
 example_image_path = Path(image_path)
 
-if not example_image_path.exists():
-    Image.open(requests.get(example_image_url, stream=True).raw).save(example_image_path)
+# if not example_image_path.exists():
+#     Image.open(requests.get(example_image_url, stream=True).raw).save(example_image_path)
 
 image = Image.open(example_image_path)
 question = "描述一下图片内容，如果有人物，单独描述人物的表情和外貌特征，不要描述背景。"
@@ -73,14 +80,14 @@ class PerformanceStreamer(TextStreamer):
         
     def put(self, value):
         global first_token_time, total_tokens
-        if self.token_count == 0:
+        if self.token_count == 1:
             first_token_time = time.time() - start_time
         self.token_count += 1
         total_tokens += 1
         super().put(value)
 
 streamer = PerformanceStreamer(processor.tokenizer, skip_special_tokens=True)
-generated_ids = model.generate(**inputs, max_new_tokens=60, streamer=streamer)
+generated_ids = ov_model.generate(**inputs, max_new_tokens=60, streamer=streamer)
 
 end_time = time.time()
 total_time = end_time - start_time

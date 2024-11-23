@@ -7,7 +7,7 @@
 ```Python
 pip install -q "transformers>=4.45" "torch>=2.1" "torchvision" "qwen-vl-utils" "Pillow" "gradio>=4.36" --extra-index-url https://download.pytorch.org/whl/cpu
 pip install -qU "openvino>=2024.4.0" "nncf>=2.13.0"
-pip install ipywidgets
+# pip install ipywidgets
 ```
 
 

@@ -19,15 +19,15 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 model_ids = ["Qwen/Qwen2-VL-2B-Instruct", "Qwen/Qwen2-VL-7B-Instruct"]
 
 
-def model_selector(default=model_ids[0]):
-    import ipywidgets as widgets
-
-    model_checkpoint = widgets.Dropdown(
-        options=model_ids,
-        default=default,
-        description="Model:",
-    )
-    return model_checkpoint
+# def model_selector(default=model_ids[0]):
+#     import ipywidgets as widgets
+#
+#     model_checkpoint = widgets.Dropdown(
+#         options=model_ids,
+#         default=default,
+#         description="Model:",
+#     )
+#     return model_checkpoint
 
 
 def model_has_state(ov_model: ov.Model):

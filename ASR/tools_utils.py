@@ -140,7 +140,7 @@ def check_battery_status():
     except Exception as e:
         return f"获取电池信息时出错: {str(e)}"
 
-# 4.启/关闭省电模式
+
 def run_with_admin_rights(command):
     """
     以管理员权限运行命令
@@ -240,7 +240,7 @@ def set_power_mode(enable: str):
             
         # 调整屏幕亮度
         try:
-            Set_brightness("50" if enable else "75")
+            set_brightness("50" if enable else "75")
         except:
             pass
             
@@ -356,10 +356,10 @@ def control_calculator(enable: str):
         return Response.failed(f"操作计算器时出错: {str(e)}")
 
 # 7.打开/关闭任务管理器
-def control_task_manager(enable: str):
+def control_task_manager(action: bool):
     """
     控制 Windows 系统任务管理器的打开/关闭
-    :param enable: "True" 打开任务管理器，"False" 关闭任务管理器
+    :param action: True 打开任务管理器，False 关闭任务管理器
     :return: 操作结果信息的字符串
     """
     try:
@@ -582,7 +582,7 @@ def get_brightness():
         return Response.failed(f"获取屏幕亮度时出错: {str(e)}")
 
 # 13.调用摄像头拍照，并把照片传给qwenV模型响应
-def camera_to_vLLM():
+def camera_to_vLLM(action: bool):
     '''
     能够获取相机拍照的照片，并传给vllm模型进行响应
     :return: 返回多模态模型输出的文本信息

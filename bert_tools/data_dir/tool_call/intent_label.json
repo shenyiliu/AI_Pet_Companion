@@ -12,15 +12,15 @@
         "VOLUME": 9
     },
     "id2intent": {
-        "AIRPLANE_MODE": 0,
-        "BATTERY": 1,
-        "BRIGHTNESS": 2,
-        "CALCULATOR": 3,
-        "POWER_SAVING_MODE": 4,
-        "SCREENSHOT": 5,
-        "SYSTEM_INFO": 6,
-        "TASK_MANAGER": 7,
-        "VIDEO_CHAT": 8,
-        "VOLUME": 9
+        "0": "AIRPLANE_MODE",
+        "1": "BATTERY",
+        "2": "BRIGHTNESS",
+        "3": "CALCULATOR",
+        "4": "POWER_SAVING_MODE",
+        "5": "SCREENSHOT",
+        "6": "SYSTEM_INFO",
+        "7": "TASK_MANAGER",
+        "8": "VIDEO_CHAT",
+        "9": "VOLUME"
     }
 }

@@ -5,7 +5,6 @@ from pathlib import Path
 from transformers import AutoProcessor, AutoTokenizer
 from qwen_vl_utils import process_vision_info
 from transformers import TextStreamer
-# import requests
 import time
 
 
@@ -16,7 +15,7 @@ download_dir = os.path.join(project_dir, "download")
 output_dir = os.path.join(project_dir, "output")
 pt_model_dir = os.path.join(download_dir, pt_model_id)
 ov_model_dir = os.path.join(output_dir, "Qwen2-VL-2B-Instruct-ov")
-ov_model = OVQwen2VLModel(ov_model_dir, device="AUTO")
+ov_model = OVQwen2VLModel(ov_model_dir, device="GPU")
 
 
 min_pixels = 256 * 28 * 28
@@ -27,15 +26,17 @@ if processor.chat_template is None:
     tokenizer = AutoTokenizer.from_pretrained(pt_model_dir)
     processor.chat_template = tokenizer.chat_template
 
-example_image_url = "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
 
-image_path = "./demo.jpeg"
-# image_path = "D:\GitHub\AI_Pet_Companion\ASR\image\camera_20241122_163055.jpg"
+image_path = os.path.join(now_dir, "demo.jpeg")
+# 拿拍出来的照片做测试（选第一张照片，或者按日期排序，选最新一张照片？）
+image_dir = os.path.join(output_dir, "image")
+for file in os.listdir(image_dir):
+    if file.endswith("jpg"):
+        image_path = os.path.join(image_dir, file)
+        break
 
 example_image_path = Path(image_path)
 
-# if not example_image_path.exists():
-#     Image.open(requests.get(example_image_url, stream=True).raw).save(example_image_path)
 
 image = Image.open(example_image_path)
 question = "描述一下图片内容，如果有人物，单独描述人物的表情和外貌特征，不要描述背景。"

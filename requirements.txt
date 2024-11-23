@@ -1,6 +1,7 @@
 openvino==2024.4.0
 openvino-genai==2024.4.0
-transformers==4.38.0
+transformers==4.38.0 # or 4.45?
+# optimum-intel==1.20.1
 torch<2.5.0  # for nncf
 torchvision<0.20
 optimum[openvino]
@@ -28,3 +29,4 @@ pycaw
 wmi
 pyautogui
 opencv-python
+qwen_vl_utils

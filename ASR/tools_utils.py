@@ -27,6 +27,9 @@ import cv2
 # 添加一个全局变量来跟踪摄像头状态
 _camera = None
 
+now_dir = os.path.dirname(os.path.abspath(__file__))
+project_dir = os.path.dirname(now_dir)
+output_dir = os.path.join(project_dir, "output")
 
 class Response:
     def __init__(self, status="success", message="", image_path="", data=""):
@@ -475,7 +478,7 @@ def control_camera(enable: bool) -> dict:
         from datetime import datetime
         
         # 检查并创建image文件夹
-        image_dir = os.path.join(os.getcwd(), "image")
+        image_dir = os.path.join(output_dir, "image")
         if not os.path.exists(image_dir):
             os.makedirs(image_dir)
         
@@ -620,7 +623,7 @@ if __name__ == "__main__":
     #print(get_system_info())
 
     # 10.测试控制摄像头开关并拍照
-    #print(control_camera())   # 打开摄像头并拍照
+    # print(control_camera(True))   # 打开摄像头并拍照
 
     # 11.测试获取当前音量函数
     #print(get_volume())

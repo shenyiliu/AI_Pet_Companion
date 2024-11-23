@@ -25,6 +25,52 @@ class Predict(MyDataLoad):
         self.load_model(model_path)
         self.max_seq_len = params.model_info["max_seq_len"]
         # self.tokenizer = None
+        # 意图和函数的映射
+        self.intent2task = {
+            # 多参数
+            "VOLUME": {
+                "fun": "set_volume",
+                "entity": {
+                    "Add": {"action": "+", "value": None},
+                    "Sub": {"action": "-", "value": None},
+                    "To": {"action": None, "value": None},
+                    "Close": {"action": None, "value": 0}
+                }
+            },
+            "BRIGHTNESS": {
+                "fun": "set_brightness",
+                "entity": {
+                    "Add": {"action": "+", "value": None},
+                    "Sub": {"action": "-", "value": None},
+                    "To": {"action": None, "value": None},
+                }
+            },
+            # 无参数
+            "BATTERY": {"fun": "check_battery_status"},
+            "SCREENSHOT": {"fun": "capture_screen"},
+            "SYSTEM_INFO": {"fun": "get_system_info"},
+            # 单参数
+            "POWER_SAVING_MODE": {
+                "fun": "set_power_mode",
+                "entity": {"On": True, "Open": True, "Off": False, "Close": False}
+            },
+            "AIRPLANE_MODE": {
+                "fun": "set_airplane_mode",
+                "entity": {"On": True, "Open": True, "Off": False, "Close": False}
+            },
+            "CALCULATOR": {
+                "fun": "control_calculator",
+                "entity": {"On": True, "Open": True, "Off": False, "Close": False}
+            },
+            "TASK_MANAGER": {
+                "fun": "control_task_manager",
+                "entity": {"On": True, "Open": True, "Off": False, "Close": False}
+            },
+            "VIDEO_CHAT": {
+                "fun": "camera_to_vLLM",
+                "entity": {"On": True, "Open": True, "Off": False, "Close": False}
+            }
+        }
 
     def load_model(self, model_path):
         """
@@ -169,56 +215,10 @@ class Predict(MyDataLoad):
             intent_name (str): 意图名称
             entity_action (str): 实体动作, 有些无实体意图可能为空
         """
-        # 意图和函数的映射
-        intent2task = {
-            # 多参数
-           "VOLUME": {
-               "fun": "set_volume",
-               "entity": {
-                   "Add": {"action": "+", "value": None},
-                   "Sub": {"action": "-", "value": None},
-                   "To": {"action": None, "value": None},
-                   "Close": {"action": None, "value": 0}
-               }
-            },
-           "BRIGHTNESS": {
-               "fun": "set_brightness",
-               "entity": {
-                   "Add": {"action": "+", "value": None},
-                   "Sub": {"action": "-", "value": None},
-                   "To": {"action": None, "value": None},
-               }
-            },
-           # 无参数
-           "BATTERY": {"fun": "check_battery_status"},
-           "SCREENSHOT": {"fun": "capture_screen"},
-           "SYSTEM_INFO": {"fun": "get_system_info"},
-           # 单参数
-           "POWER_SAVING_MODE": {
-               "fun": "set_power_mode",
-               "entity": {"On": True, "Open": True, "Off": False, "Close": False}
-           },
-           "AIRPLANE_MODE": {
-               "fun": "set_airplane_mode",
-               "entity": {"On": True, "Open": True, "Off": False, "Close": False}
-            },
-           "CALCULATOR": {
-               "fun": "control_calculator",
-               "entity": {"On": True, "Open": True, "Off": False, "Close": False}
-           },
-           "TASK_MANAGER": {
-               "fun": "control_task_manager",
-               "entity": {"On": True, "Open": True, "Off": False, "Close": False}
-            },
-           "VIDEO_CHAT": {
-               "fun": "camera_to_vLLM",
-               "entity": {"On": True, "Open": True, "Off": False, "Close": False}
-            }
-        }
         # 对于双参数意图
         if intent_name in {"VOLUME", "BRIGHTNESS"}:
-            exe_func = intent2task[intent_name]["fun"]
-            entity_dict = intent2task[intent_name]["entity"]
+            exe_func = self.intent2task[intent_name]["fun"]
+            entity_dict = self.intent2task[intent_name]["entity"]
             action_dict = entity_dict[entity_action]
             if entity_action != "Close":
                 # 提取数据
@@ -229,18 +229,17 @@ class Predict(MyDataLoad):
             return {"func": exe_func, "args": action_dict}
         # 对于无参数意图
         elif intent_name in {"BATTERY", "SCREENSHOT", "SYSTEM_INFO"}:
-            exe_func = intent2task[intent_name]["fun"]
+            exe_func = self.intent2task[intent_name]["fun"]
             return {"func": exe_func, "args": {}}
         # 对于单参数意图
         elif intent_name in intent2task:
-            exe_func = intent2task[intent_name]["fun"]
-            entity_dict = intent2task[intent_name]["entity"]
+            exe_func = self.intent2task[intent_name]["fun"]
+            entity_dict = self.intent2task[intent_name]["entity"]
             value = entity_dict[entity_action]
             return {"func": exe_func, "args": {"action": None, "value": value}}
         # 对于无意图
         else:
             return {"func": None, "args": {}}
-
 
     def predict(self, text_list: list, threshold: float = 0.8, batch_size=64):
         """
@@ -272,13 +271,19 @@ class Predict(MyDataLoad):
                 if raw_intent_type == intent_name:
                     # 开始映射任务
                     data = self.map_task(text, intent_name, entity_action)
+                else:
+                    data = {}
             else:
                 # 如果是无参数的意图
                 if intent_name in {"BATTERY", "SCREENSHOT", "SYSTEM_INFO", None}:
                     data = self.map_task("", intent_name, "")  
                 # 如果是双参数的意图，可以进一步询问
                 elif intent_name in {"VOLUME", "BRIGHTNESS"}:
-                    if "最大" in text or "最高" in text:
+                    value = self.get_number(text)
+                    if value is not None:
+                        exe_func = self.intent2task[intent_name]["fun"]
+                        data = {"func": exe_func, "args": {"action": None, "value": value}}
+                    elif "最大" in text or "最高" in text:
                         data = {"func": "set_volume", "args": {"action": None, "value": 100}}
                     elif "最小" in text or "最低" in text:
                         data = {"func": "set_volume", "args": {"action": None, "value": 0}}
@@ -308,10 +313,7 @@ if __name__ == '__main__':
     model_path1 = os.path.join(now_dir, "out_model", "best.pth")
     predict = Predict(model_path1)
     text_list1 = [
-        "帮我打开任务管理器",
-        "你好",
-        "让我们开始AI视频聊天吧",
-        "音量调的小一点"
+        "音量设置为50",
     ]
     et = time.time()
     result_data2 = predict.predict(text_list1)

@@ -22,3 +22,9 @@ langchain-chroma>=0.1.2
 # bert_tools
 colored
 pygame
+# tools_utils
+comtypes
+pycaw
+wmi
+pyautogui
+opencv-python

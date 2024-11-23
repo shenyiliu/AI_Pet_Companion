@@ -22,6 +22,11 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import wmi
 import os
 import sys
+import cv2
+
+# 添加一个全局变量来跟踪摄像头状态
+_camera = None
+
 
 class Response:
     def __init__(self, status="success", message="", image_path="", data=""):
@@ -457,13 +462,15 @@ def get_system_info() -> str:
         return Response.failed(f"获取系统信息时出错: {str(e)}")
 
 # 10.打开/关闭摄像头,拍一张照片
-def control_camera() -> dict:
+def control_camera(enable: bool) -> dict:
     """
     控制摄像头开关并拍照
+    :param enable: "True" 打开摄像头，"False" 关闭摄像头
     :return: dict {"message": "执行结果信息", "imagePath": "图片保存路径"}
     """
     try:
-        import cv2
+        global _camera
+        import time
         import os
         from datetime import datetime
         
@@ -471,22 +478,27 @@ def control_camera() -> dict:
         image_dir = os.path.join(os.getcwd(), "image")
         if not os.path.exists(image_dir):
             os.makedirs(image_dir)
-            
-        # 打开摄像头
-        cap = cv2.VideoCapture(0)
         
-        if not cap.isOpened():
-            return Response.failed("无法打开摄像头", "")
+        # 如果是关闭命令，关闭摄像头并返回
+        if not enable:
+            if _camera is not None:
+                _camera.release()
+                _camera = None
+            return Response.success("摄像头已关闭")
             
-        # 等待摄像头预热
-        import time
-        time.sleep(1)
+        # 如果摄像头未打开，则打开摄像头
+        if _camera is None:
+            _camera = cv2.VideoCapture(0)
+            if not _camera.isOpened():
+                _camera = None
+                return Response.failed("无法打开摄像头", "")
+            # 等待摄像头预热
+            time.sleep(1)
         
         # 拍照
-        ret, frame = cap.read()
+        ret, frame = _camera.read()
         
         if not ret:
-            cap.release()
             return Response.failed("无法获取图像", "")
             
         # 生成文件名（使用时间戳）
@@ -496,13 +508,14 @@ def control_camera() -> dict:
         # 保存图片
         cv2.imwrite(image_path, frame)
         
-        # 关闭摄像头
-        cap.release()
-        
+        # 注意：这里不再关闭摄像头，保持摄像头打开状态
         return Response.success("拍照成功", image_path)
             
-            
     except Exception as e:
+        # 只在发生异常且是关闭命令时释放摄像头
+        if _camera is not None and enable:
+            _camera.release()
+            _camera = None
         return Response.failed(f"操作摄像头时出错: {str(e)}")
 
 # 11.获取当前音量大小
@@ -553,40 +566,52 @@ def get_brightness():
 def camera_to_vLLM(enable: bool):
     '''
     能够获取相机拍照的照片，并传给vllm模型进行响应
+    :param enable: "True" 打开摄像头并拍照, "False" 关闭摄像头
     :return: 返回多模态模型输出的文本信息
     '''
-    # 1.获取照片
-    response = control_camera()
-    print(response["imagePath"])
+    if enable:
+        # 1.获取照片，但不关闭摄像头
+        response = control_camera(enable)
+        print(response["imagePath"])
+        
+        # 2.将图片传给qwenV模型响应
+        # TODO: 添加模型处理逻辑
+        
+    else:
+        # 关闭摄像头
+        response = control_camera(enable)
+        print("摄像头已关闭")
 
-    # 2.将图片传给qwenV模型响应
+
+
+
 
 if __name__ == "__main__":
     # 1.测试控制音量函数
-    #print(set_volume("100"))
+    #print(set_volume(100))
     
     # 2.测试控制亮度函数
-    #print(set_brightness("75"))
+    #print(set_brightness(70))
     
     # 3.测试电池状态检测函数
     # battery_info = check_battery_status()
     # print(battery_info)
     
     # 4.测试省电模式控制函数
-    #print(set_power_mode("True"))   # 开启省电模式
-    #print(set_power_mode("False"))  # 关闭省电模式
+    #print(set_power_mode(True))   # 开启省电模式
+    #print(set_power_mode(False))  # 关闭省电模式
 
     # 5.测试飞行模式控制函数
-    #print(set_airplane_mode("True"))   # 开启飞行模式
-    #print(set_airplane_mode("False"))  # 关闭飞行模式
+    #print(set_airplane_mode(True))   # 开启飞行模式
+    #print(set_airplane_mode(False))  # 关闭飞行模式
 
     # 6.测试打开/关闭计算器
-    #print(control_calculator("True"))   # 打开计算器
-    #print(control_calculator("False"))  # 关闭计算器
+    #print(control_calculator(True))   # 打开计算器
+    #print(control_calculator(False))  # 关闭计算器
     
     # 7.测试打开/关闭任务管理器
-    #print(control_task_manager("True"))   # 打开任务管理器
-    #print(control_task_manager("False"))  # 关闭任务管理器
+    #print(control_task_manager(True))   # 打开任务管理器
+    #print(control_task_manager(False))  # 关闭任务管理器
 
     # 8.测试截图功能
     #print(capture_screen())

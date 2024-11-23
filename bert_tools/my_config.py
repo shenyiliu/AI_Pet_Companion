@@ -79,6 +79,7 @@ class MyConfig:
             json_data = json.load(f)
             intent2id = json_data[f"{label_type}2id"]
             id2intent = json_data[f"id2{label_type}"]
+            id2intent = {int(key): value for (key, value) in id2intent.items()}
         return intent2id, id2intent
 
 

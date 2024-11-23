@@ -229,7 +229,7 @@ def get_entity(text: str, offset_list: list, entity_triples: list,
                 end = len(text)
             desc = text[start: end].rstrip()
             end = start + len(desc)
-            entity_type = id2entity[str(int(entity[0]))]
+            entity_type = id2entity[int(entity[0])]
             temp_dict = {
                 "position": [int(start), int(end)],
                 "entity_type": entity_type,

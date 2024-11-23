@@ -9,6 +9,10 @@
    cd bert_tools 
    python train.py
    ```
+5. 部署api
+   ```bash
+   uvicorn api:app --host 127.0.0.1  --port 5518 --workers 1
+   ```
 
 ### 文件说明
 1. `train.py`训练模型用
@@ -16,7 +20,10 @@
 3. `my_config.py`用于导入配置文件，并且包含部分配置文件
 4. `my_tools`文件夹，包括数据导入，模型等信息。
 5. `out_model`输出训练好的模型，用该模型输出预测结果
-6. 验证日志
+6. `predict.py`执行推理用
+7. `api.py` 部署api用
+
+### 训练日志
 ```bash
 valid metrics info:
 AIRPLANE_MODE/On: acc: 1.00000  recall: 1.00000 f1: 1.00000     number: 15
@@ -39,10 +46,7 @@ overall_recall: 0.97902
 overall_precision: 0.97902
 overall_f1: 0.97902
 intent acc : 100.00%
-
 ```
-
 
 ### 注：
 - 参考论文：[DIET,  Dual Intent and Entity Transformer](https://arxiv.org/pdf/2004.09936.pdf)
-- FastTransFormer: [链接](https://github.com/NVIDIA/FasterTransformer)

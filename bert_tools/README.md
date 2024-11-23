@@ -3,13 +3,14 @@
 2. 将[预训练模型](https://hf-mirror.com/google-bert/bert-base-chinese)丢到`pretrain_models`文件夹,例如`bert_tools/pretrain_models/bert-base-chinese`
 3. 复用主项目的openvino虚拟环境
 4. (可选)执行train.py训练模型
-   - 训练好的模型：通过百度网盘分享的文件：链接：https://pan.baidu.com/s/1OnpsSNmQ-CA5_VF8CdC-ig?pwd=mxj7 提取码：mxj7）
-   - 将训练好的模型文件best.pth，放到当前目录的output_model文件夹
    ```bash
    cd bert_tools 
    python train.py
    ```
-5. 部署api
+
+5. 将训练好的模型文件best.pth，放到当前目录的output_model文件夹
+   - 训练好的模型：通过百度网盘分享的文件：链接：https://pan.baidu.com/s/1OnpsSNmQ-CA5_VF8CdC-ig?pwd=mxj7 提取码：mxj7）
+6. 部署api
    ```bash
    uvicorn api:app --host 127.0.0.1  --port 5518 --workers 1
    ```

@@ -47,14 +47,13 @@ class Response:
         return Response("failed", message, image_path, data).to_dict()
 
 # 1.调整音量
-def set_volume(volume_level:str):
+def set_volume(volume_level: int):
     """
     设置 Windows 系统音量
     :param volume_level: 音量大小(1-100的整数)
     :return: None
     """
     try:
-        volume_level = int(volume_level)
         # 验证输入值是否在有效范围内
         if not isinstance(volume_level, int) or volume_level < 0 or volume_level > 100:
             raise ValueError("音量必须是0-100之间的整数")
@@ -75,14 +74,13 @@ def set_volume(volume_level:str):
         return Response.failed(f"设置音量时出错: {str(e)}")
 
 # 2.调整亮度
-def set_brightness(brightness_level: str):
+def set_brightness(brightness_level: int):
     """
     设置 Windows 系统屏幕亮度
     :param brightness_level: 亮度值(1-100的整数)
     :return: None
     """
     try:
-        brightness_level = int(brightness_level)
         # 验证输入值是否在有效范围内
         if not isinstance(brightness_level, int) or brightness_level < 1 or brightness_level > 100:
             raise ValueError("亮度必须是1-100之间的整数")
@@ -166,7 +164,7 @@ def run_with_admin_rights(command):
         )
 
 # 4.1.开启/关闭省电模式
-def set_power_mode(enable: str):
+def set_power_mode(enable: bool):
     """
     控制 Windows 系统的省电模式
     :param enable: True 开启省电模式，False 关闭省电模式
@@ -181,13 +179,6 @@ def set_power_mode(enable: str):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.bat', mode='w') as f:
             f.write('@echo off\n')
             # 将 str 类型 enable 转换为 bool 类型
-            if enable.lower() == 'true':
-                enable = True
-            elif enable.lower() == 'false':
-                enable = False
-            else:
-                return "输入错误，请输入 True 或 False"
-
             if enable:
                 # 切换到节能计划
                 f.write('powercfg /setactive a1841308-3541-4fab-bc81-f71556f20b4a\n')
@@ -250,21 +241,13 @@ def set_power_mode(enable: str):
         return Response.failed(f"设置省电模式时出错: {str(e)}")
     
 # 5.开启/关闭飞行模式
-def set_airplane_mode(enable: str):
+def set_airplane_mode(enable: bool):
     """
     控制 Windows 系统的飞行模式
-    :param enable: "True" 开启飞行模式，"False" 关闭飞行模式
+    :param enable: True 开启飞行模式，False 关闭飞行模式
     :return: 操作结果信息
     """
     try:
-        # 将字符串转换为布尔值
-        if enable.lower() == 'true':
-            enable = True
-        elif enable.lower() == 'false':
-            enable = False
-        else:
-            return "输入错误，请输入 True 或 False"
-            
         # 使用 PowerShell 命令来控制飞行模式
         import subprocess
         
@@ -308,21 +291,13 @@ def set_airplane_mode(enable: str):
         return Response.failed(f"设置飞行模式时出错: {str(e)}")
 
 # 6.打开/关闭计算器
-def control_calculator(enable: str):
+def control_calculator(enable: bool):
     """
     控制 Windows 系统计算器的打开/关闭
-    :param enable: "True" 打开计算器，"False" 关闭计算器
+    :param enable: True 打开计算器，False 关闭计算器
     :return: 操作结果信息
     """
     try:
-        # 将字符串转换为布尔值
-        if enable.lower() == 'true':
-            enable = True
-        elif enable.lower() == 'false':
-            enable = False
-        else:
-            return "输入错误，请输入 True 或 False"
-            
         import subprocess
         
         if enable:
@@ -356,21 +331,14 @@ def control_calculator(enable: str):
         return Response.failed(f"操作计算器时出错: {str(e)}")
 
 # 7.打开/关闭任务管理器
-def control_task_manager(action: bool):
+def control_task_manager(enable: bool):
     """
     控制 Windows 系统任务管理器的打开/关闭
-    :param action: True 打开任务管理器，False 关闭任务管理器
+    :param enable: True 打开任务管理器，False 关闭任务管理器
     :return: 操作结果信息的字符串
     """
     try:
         # 将字符串转换为布尔值
-        if enable.lower() == 'true':
-            enable = True
-        elif enable.lower() == 'false':
-            enable = False
-        else:
-            return "输入错误，请输入 True 或 False"
-            
         import subprocess
         import tempfile
         import os
@@ -582,7 +550,7 @@ def get_brightness():
         return Response.failed(f"获取屏幕亮度时出错: {str(e)}")
 
 # 13.调用摄像头拍照，并把照片传给qwenV模型响应
-def camera_to_vLLM(action: bool):
+def camera_to_vLLM(enable: bool):
     '''
     能够获取相机拍照的照片，并传给vllm模型进行响应
     :return: 返回多模态模型输出的文本信息
@@ -636,7 +604,7 @@ if __name__ == "__main__":
     #print(get_brightness())
 
     # 13.
-    camera_to_vLLM()
+    camera_to_vLLM(True)
 
 
 

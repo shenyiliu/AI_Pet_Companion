@@ -401,8 +401,8 @@ def process_tts_queue():
             text = tts_queue.get(timeout=1)
             if text:
                 # 执行TTS
-                TTS_stream(text)
-                #TTS_play_audio_stream(text)
+                #TTS_stream(text)
+                TTS_play_audio_stream(text)
                 # 标记任务完成
                 tts_queue.task_done()
         except Empty:

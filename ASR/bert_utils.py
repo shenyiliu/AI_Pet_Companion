@@ -85,7 +85,7 @@ def execute_tool(tool_name: str, tool_value: str) -> Dict:
     except Exception as e:
         return {"status": "failed", "message": f"执行工具时出错: {str(e)}"}
 
-def classify_tool(text_list: List[str], threshold: float = 0.5) -> Dict[str, Any]:
+def classify_tool(text_list: List[str], threshold: float = 0.8) -> Dict[str, Any]:
     """
     发送POST请求到工具分类API并解析返回结果
     
@@ -131,8 +131,13 @@ def classify_tool(text_list: List[str], threshold: float = 0.5) -> Dict[str, Any
 
 # 使用示例
 if __name__ == "__main__":
+    '''
+    这里添加标准对话测试
+    
+    
+    '''
     # 测试函数
-    text_list = ["你好呀你能帮我做什么呀"]
+    text_list = ["请你帮我音量调整小一些"]
     result = classify_tool(text_list)
     
     if result:
@@ -150,8 +155,26 @@ if __name__ == "__main__":
             print(f"工具参数: action: {tool_args_action} value: {tool_args_value}")
             print(f"工具消息: {tool_message}")
 
-            # 2.执行工具
-            tool_result = execute_tool(tool_name, tool_args_value)
+            # 控制加减亮度/屏幕
+            if tool_args_action is not None:
+                num = 0
+                # 判断获取音量还是获取亮度
+                if tool_name == "set_brightness":
+                    num = tools.get_brightness()["data"]
+                
+                if tool_name == "set_volume":
+                    num = tools.get_volume()["data"]
+
+                if tool_args_action == "+":
+                    num += 10
+                elif tool_args_action == "-":
+                    num -= 10
+
+                tool_result = execute_tool(tool_name, num)
+            else:
+                # 2.执行工具
+                tool_result = execute_tool(tool_name, tool_args_value)
+
             status = tool_result['status']
             if status == "success":
                 response_message = tool_result['message']

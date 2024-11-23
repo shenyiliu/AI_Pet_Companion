@@ -158,17 +158,20 @@ def run_with_admin_rights(command):
     import subprocess
     
     if ctypes.windll.shell32.IsUserAnAdmin():
-        # 如果已经是管理员权限，直接执行
-        subprocess.run(command, shell=True)
+        # 如果已经是管理员权限，使用隐藏窗口方式执行
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+        subprocess.run(command, shell=True, startupinfo=startupinfo)
     else:
-        # 请求管理员权限
+        # 请求管理员权限并隐藏窗口
         ctypes.windll.shell32.ShellExecuteW(
             None, 
-            "runas",  # 请求管理员权限
-            sys.executable,  # Python解释器路径
-            f'"{sys.argv[0]}" "{command}"',  # 要执行的脚本和命令
+            "runas",
+            sys.executable,
+            f'"{sys.argv[0]}" "{command}"',
             None, 
-            1  # SW_SHOWNORMAL
+            0  # SW_HIDE
         )
 
 # 4.1.开启/关闭省电模式
@@ -346,7 +349,6 @@ def control_task_manager(enable: bool):
     :return: 操作结果信息的字符串
     """
     try:
-        # 将字符串转换为布尔值
         import subprocess
         import tempfile
         import os
@@ -357,12 +359,21 @@ def control_task_manager(enable: bool):
             subprocess.run(['powershell', 'Start-Process', 'taskmgr.exe'])
             return Response.success("任务管理器已打开")
         else:
-            # 创建临时 PowerShell 脚本文件
+            # 首先尝试直接关闭任务管理器
+            try:
+                result = subprocess.run(['taskkill', '/F', '/IM', 'Taskmgr.exe'], 
+                                     capture_output=True,
+                                     text=True)
+                if result.returncode == 0:
+                    return Response.success("任务管理器已关闭")
+            except:
+                pass
+            
+            # 如果直接关闭失败，则使用管理员权限尝试关闭
             with tempfile.NamedTemporaryFile(delete=False, suffix='.ps1', mode='w') as f:
                 f.write('Stop-Process -Name Taskmgr -Force\n')
                 ps_file = f.name
             
-            # 使用 PowerShell 以管理员权限执行脚本
             command = f'powershell -Command "Start-Process powershell -ArgumentList \'-ExecutionPolicy Bypass -File {ps_file}\' -Verb RunAs"'
             subprocess.run(command, shell=True)
             

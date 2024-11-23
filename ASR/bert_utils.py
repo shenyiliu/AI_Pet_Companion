@@ -85,7 +85,7 @@ def execute_tool(tool_name: str, tool_value: str) -> Dict:
     except Exception as e:
         return {"status": "failed", "message": f"执行工具时出错: {str(e)}"}
 
-def classify_tool(text_list: List[str], threshold: float = 0.6) -> Dict[str, Any]:
+def classify_tool(text_list: List[str], threshold: float = 0.5) -> Dict[str, Any]:
     """
     发送POST请求到工具分类API并解析返回结果
     
@@ -132,7 +132,7 @@ def classify_tool(text_list: List[str], threshold: float = 0.6) -> Dict[str, Any
 # 使用示例
 if __name__ == "__main__":
     # 测试函数
-    text_list = ["关闭计算器"]
+    text_list = ["你好呀你能帮我做什么呀"]
     result = classify_tool(text_list)
     
     if result:

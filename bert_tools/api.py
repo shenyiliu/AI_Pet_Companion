@@ -15,7 +15,7 @@ app = FastAPI()
 # predict = Predict(os.path.join("out_model", "best.pth"))
 # openvino
 model_path1 = os.path.join(now_dir, "out_model", "bert_ov", "bert.xml")
-predict = Predict(model_path1)
+predict = Predict(model_path1, ov_device="NPU")
 
 
 

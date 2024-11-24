@@ -129,7 +129,8 @@ def transcribe_audio(audio_file):
             save_transcription_messages = ''
         save_transcription_messages += response
 
-        return emotion +","+ response
+        #return emotion +","+ response
+        return emotion,response
     except Exception as e:
         print("Transcription failed:", e)
 
@@ -269,7 +270,7 @@ def play_start_sound():
         pygame.mixer.quit()
         
     except Exception as e:
-        print(f"播放提示音出错: {e}")
+        print(f"播放提示音��错: {e}")
 
 def process_audio():
     """处理音频的独立线程函数"""
@@ -325,14 +326,26 @@ def process_audio():
                             write(temp_conversation_path, sample_rate, audio_data)
                             
                             # 转录当前对话
-                            current_transcription = transcribe_audio(temp_conversation_path)
+                            emotion,current_transcription = transcribe_audio(temp_conversation_path)
                             if current_transcription and current_transcription.strip():  # 确保转录结果不为空
                                 all_transcriptions.append(current_transcription)
                                 print(f"当前对话转录完成: {current_transcription}")
 
-                                # 这里可以添加对话处理逻辑，比如调用 LLM 或 TTS
-                                # 调用Mem0_LLM_TTS
-                                Mem0_LLM_TTS(current_transcription,"john")
+                                # 工具调用
+                                result = bu.BERT_tool_call(current_transcription)
+                                print(f"BERT_tool_call工具调用结果: {result}")
+                                if result is not None:
+                                    print("直接进行TTS转录")
+                                    TTS_play_audio_stream(result)
+                                else:
+                                    print("不调用工具")
+                                    # 这里可以添加对话处理逻辑，比如调用 LLM 或 TTS
+                                    # 调用Mem0_LLM_TTS
+                                    current_transcription = emotion+","+current_transcription
+
+                                    Mem0_LLM_TTS(current_transcription,"john")
+
+                                
 
                             # 清空当前对话缓冲区，准备下一轮对话
                             conversation_buffer = []
@@ -345,65 +358,6 @@ def process_audio():
     
     # 返回所有对话的转录结果
     return all_transcriptions
-
-# BERT意图识别进行工具调用
-def BERT_tool_call(current_transcription:str):
-    '''
-    1.意图识别
-    2.工具调用
-    '''
-    text_list = [current_transcription]
-
-    result = bu.classify_tool(text_list)
-    
-    if result:
-        print("请求成功!")
-        print(f"处理时间: {result['during']}秒")
-
-        # 1.解析工具名称
-        tool_name = result['data'][0]['data']['func']
-        if tool_name is not None:
-            # 安全地获取参数
-            tool_args = result['data'][0]['data']['args']
-            tool_message = result['data'][0]['message']
-            
-            print(f"工具名称: {tool_name}")
-            print(f"工具参数: {tool_args}")
-            print(f"工具消息: {tool_message}")
-
-            # 只有在需要action的工具才处理action
-            if 'action' in tool_args and tool_args['action'] is not None:
-                num = 0
-                # 判断获取音量还是获取亮度
-                if tool_name == "set_brightness":
-                    num = tu.get_brightness()["data"]
-                elif tool_name == "set_volume":
-                    num = tu.get_volume()["data"]
-
-                if tool_args['action'] == "+":
-                    num += 10
-                elif tool_args['action'] == "-":
-                    num -= 10
-
-                tool_result = bu.execute_tool(tool_name, num)
-            else:
-                # 对于不需要action的工具，直接使用value参数（如果有的话）
-                tool_value = tool_args.get('value', None)
-                tool_result = bu.execute_tool(tool_name, tool_value)
-
-            status = tool_result['status']
-            response_message = ""
-            if status == "success":
-                response_message = tool_result['message']
-                print(f"工具执行结果: {response_message}")
-            else:
-                response_message = tool_result['message']
-                print(f"工具执行失败: {response_message}")
-            
-            return response_message
-        else:
-            print("工具名称不存在")
-            return None
 
 
 
@@ -439,8 +393,12 @@ def Mem0_LLM_TTS(current_transcription:str, user_id:str):
         
         current_sentence += chunk
         
+        # 如果当前句子长度小于50个字符，继续累积
+        if len(current_sentence) < 10:
+            continue
+            
         # 检查是否有完整的句子
-        if any(punct in chunk for punct in ['。', '！', '？', '.', '!', '?']):
+        if any(punct in chunk for punct in ['。', '！', '？', '!', '?']):
             # 将当前句子加入TTS队列
             if current_sentence.strip():
                 tts_queue.put(current_sentence.strip())

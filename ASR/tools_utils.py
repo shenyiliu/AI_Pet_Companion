@@ -106,7 +106,7 @@ def set_brightness(brightness_level: int):
         return Response.failed(f"设置亮度时出错: {str(e)}")
 
 # 3.检测电池状态
-def check_battery_status():
+def check_battery_status()->str:
     """
     检测Windows系统电池状态
     :return: 包含电池信息的字典
@@ -118,7 +118,7 @@ def check_battery_status():
         battery = psutil.sensors_battery()
         
         if battery is None:
-            return "未检测到电池，可能是台式电脑或电池驱动异常"
+            return Response.success("未检测到电池，可能是台式电脑或电池驱动异常")
             
         # 获取电池信息
         percent = battery.percent  # 电池百分比
@@ -136,15 +136,13 @@ def check_battery_status():
             time_left = f"{hours}小时{minutes}分钟"
         
         # 构建返回信息
-        status = {
-            "电池电量": f"{percent}%",
-            "电源状态": "已连接电源" if power_plugged else "使用电池中",
-        }
-        
-        return status
+        power_status = "已连接电源" if power_plugged else "使用电池中"
+        status = f"电池电量: {percent}%, 电源状态: {power_status}, 剩余时间: {time_left}"
+            
+        return Response.success(status)
         
     except Exception as e:
-        return f"获取电池信息时出错: {str(e)}"
+        return Response.failed(f"获取电池信息时出错: {str(e)}")
 
 
 def run_with_admin_rights(command):
@@ -544,7 +542,7 @@ def get_volume():
         interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
         volume = cast(interface, POINTER(IAudioEndpointVolume))
         
-        # 获取当前音量值(范围0.0-1.0)
+        # 获取当���音量值(范围0.0-1.0)
         current_volume = volume.GetMasterVolumeLevelScalar()
         
         # 将音量转换为0-100的整数

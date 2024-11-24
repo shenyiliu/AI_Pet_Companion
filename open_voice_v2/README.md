@@ -16,34 +16,39 @@
    pip install git+https://github.com/myshell-ai/MeloTTS.git
    python -m unidic download
    ```
-4. 下载checkpoints_v2权重，[下载地址](https://myshell-public-repo-host.s3.amazonaws.com/openvoice/checkpoints_v2_0417.zip)并解压
+4. 下载checkpoints_v2权重，解压后放`download/OpenVoice/`目录，[下载地址](https://myshell-public-repo-host.s3.amazonaws.com/openvoice/checkpoints_v2_0417.zip)并解压
    - 下载中文tts放`download/OpenVoice/checkpoint_v2`目录，[huggingface下载地址](https://hf-mirror.com/myshell-ai/MeloTTS-Chinese)
+   - 下载英文tts放`download/OpenVoice/checkpoint_v2`目录，[huggingface下载地址](https://huggingface.co/myshell-ai/MeloTTS-English-v2)
    - 网络不好的可以直接用我下载好的百度网盘。链接: https://pan.baidu.com/s/1sF-yBvYbgktLFdrlSdeDzQ?pwd=d744 提取码: d744
    - 存放位置参考
    ```bash
-   checkpoints_v2
-    ├── base_speakers
-    │   └── ses
-    │       ├── en-au.pth
-    │       ├── en-br.pth
-    │       ├── en-default.pth
-    │       ├── en-india.pth
-    │       ├── en-newest.pth
-    │       ├── en-us.pth
-    │       ├── es.pth
-    │       ├── fr.pth
-    │       ├── jp.pth
-    │       ├── kr.pth
-    │       └── zh.pth
-    ├── converter
-    │   ├── checkpoint.pth
-    │   └── config.json
-    └── myshell-ai
-        └── MeloTTS-Chinese
-            ├── checkpoint.pth
-            ├── config.json
-            └── README.md
-   ```
+      checkpoints_v2   
+      ├── base_speakers   
+      │   └── ses   
+      │       ├── en-au.pth   
+      │       ├── en-br.pth   
+      │       ├── en-default.pth   
+      │       ├── en-india.pth   
+      │       ├── en-newest.pth   
+      │       ├── en-us.pth   
+      │       ├── es.pth   
+      │       ├── fr.pth   
+      │       ├── jp.pth   
+      │       ├── kr.pth   
+      │       └── zh.pth   
+      ├── converter   
+      │   ├── checkpoint.pth   
+      │   └── config.json   
+      └── myshell-ai   
+          ├── MeloTTS-Chinese   
+          │   ├── checkpoint.pth   
+          │   ├── config.json   
+          │   └── README.md   
+          └── MeloTTS-English-v2   
+              ├── checkpoint.pth   
+              ├── config.json   
+              └── README.m   
+      ```   
 
 5. （可选）下载[WavMark](https://huggingface.co/M4869/WavMark)模型到download目录。
 6. 下载`silero-vad`到`download/torch_hub_local/hub`目录

@@ -22,6 +22,7 @@ from queue import Queue, Empty
 from collections import deque
 import bert_utils as bu
 import tools_utils as tu
+import wave
 # 设置日志级别，看更多细节
 logging.basicConfig(level=logging.DEBUG)
 
@@ -52,6 +53,132 @@ tts_playing = False
 tts_queue = Queue()
 tts_thread = None
 is_tts_running = False
+
+# 添加全局变量
+audio_path_queue = Queue()
+record_thread = None  # 添加全局录音线程变量
+
+# 配置
+FORMAT = pyaudio.paInt16  # 采样格式
+CHANNELS = 1              # 单声道
+RATE = 16000              # 采样率（Hz）
+CHUNK = 1024              # 每个缓冲区的大小
+RECORD_SECONDS = 5        # 默认录制时长，若没有提供flage时，会录制5秒
+OUTPUT_FILENAME = "output.wav"  # 输出音频文件名
+# 传入转录的录音线程的控制变量
+flage = True
+
+def record_audio():
+    global flage
+    print("开始record_audio函数，当前flage状态:", flage)  # 调试信息
+    try:
+        # 设置pyaudio录音对象
+        p = pyaudio.PyAudio()
+        
+        # 打开麦克风前检查可用设备
+        device_count = p.get_device_count()
+        print(f"可用音频设备数量: {device_count}")  # 调试信息
+        
+        stream = p.open(format=FORMAT,
+                       channels=CHANNELS,
+                       rate=RATE,
+                       input=True,
+                       frames_per_buffer=CHUNK)
+        
+        print("成功打开音频流，开始录制...")
+        frames = []
+        
+        while flage:
+            data = stream.read(CHUNK, exception_on_overflow=False)
+            frames.append(data)
+            
+    except Exception as e:
+        print(f"录音过程出错: {str(e)}")
+        return False
+    finally:
+        try:
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
+            print("音频设备已关闭")
+            
+            if frames:  # 只有在有录音数据时才保存
+                with wave.open(OUTPUT_FILENAME, 'wb') as wf:
+                    wf.setnchannels(CHANNELS)
+                    wf.setsampwidth(p.get_sample_size(FORMAT))
+                    wf.setframerate(RATE)
+                    wf.writeframes(b''.join(frames))
+                print(f"音频文件已保存: {OUTPUT_FILENAME}")
+                audio_path_queue.put(OUTPUT_FILENAME)
+                return True
+            else:
+                print("没有录制到音频数据")
+                return False
+        except Exception as e:
+            print(f"关闭设备或保存文件时出错: {str(e)}")
+            return False
+
+# 启动录音线程
+def voice_start_recording():
+    global flage, record_thread
+    print("开始voice_start_recording函数")  # 调试信息
+    
+    try:
+        # 确保之前的录音线程已经结束
+        if record_thread and record_thread.is_alive():
+            print("检测到现有录音线程，正在停止...")  # 调试信息
+            flage = False
+            record_thread.join(timeout=2)  # 设置超时时间
+            if record_thread.is_alive():
+                print("警告：无法正常停止之前的录音线程")
+                return None
+        
+        # 清空音频队列
+        while not audio_path_queue.empty():
+            audio_path_queue.get()
+        
+        # 重置状态并启动新的录音线程
+        flage = True
+        record_thread = threading.Thread(target=record_audio)
+        record_thread.start()
+        print("新录音线程已启动")  # 调试信息
+        return record_thread
+        
+    except Exception as e:
+        print(f"启动录音线程时出错: {str(e)}")
+        flage = False
+        return None
+
+def voice_stop_recording():
+    global flage, record_thread
+    print("开始voice_stop_recording函数")  # 调试信息
+    
+    try:
+        if not record_thread or not record_thread.is_alive():
+            print("没有正在进行的录音线程")
+            return None
+            
+        print("正在停止录音...")  # 调试信息
+        flage = False
+        record_thread.join(timeout=3)  # 设置合理的超时时间
+        
+        if record_thread.is_alive():
+            print("警告：录音线程未能正常结束")
+            return None
+            
+        try:
+            audio_path = audio_path_queue.get(timeout=2)
+            print(f"成功获取录音文件路径: {audio_path}")  # 调试信息
+            return audio_path
+        except Empty:
+            print("获取音频文件路径超时")
+            return None
+            
+    except Exception as e:
+        print(f"停止录音时出错: {str(e)}")
+        return None
+    finally:
+        flage = False  # 确保标志被重置
 
 # 加载音频文件并调整采样率
 def load_audio(file_path, sample_rate=16000):
@@ -304,6 +431,9 @@ def process_audio():
                     if check_wake_word(transcription):
                         print("检测到唤醒词！准备开始对话...")
                         play_start_sound()
+                        # 开始录音
+                        time.sleep(0.5)
+                        voice_start_recording()
                         detected_wake_word = True
                         last_speech_time = time.time()
                         audio_queue.clear()  # 清空之前的音频
@@ -318,15 +448,27 @@ def process_audio():
                         print(f"检测到语音输入: {transcription}")
                         last_speech_time = time.time()
                         conversation_buffer.append(temp_audio)
+                        
                     elif time.time() - last_speech_time > SILENCE_THRESHOLD:
-                        # 检测到静音，处理当前对话
-                        if conversation_buffer and len(conversation_buffer) > 0:  # 确保有实际的对话内容
-                            audio_data = np.concatenate(conversation_buffer, axis=0)
-                            temp_conversation_path = os.path.join("audio", f"conversation_{len(all_transcriptions)}.wav")
-                            write(temp_conversation_path, sample_rate, audio_data)
+                        if conversation_buffer and len(conversation_buffer) > 0:
+                            # 停止当前录音并等待一段时间
+                            print("检测到静音，准备停止当前录音...")  # 调试信息
+                            OUTPUT_FILENAME = voice_stop_recording()
+                            time.sleep(0.5)  # 等待资源释放
+                            
+                            if OUTPUT_FILENAME is None:
+                                print("警告：无法获取录音文件路径")
+                                continue
+                            
+                            print(f"准备开始新的录音...")  # 调试信息
+                            time.sleep(0.5)  # 再次等待以确保资源完全释放
+                            if not voice_start_recording():
+                                print("警告：无法启动新的录音")
+                                continue
                             
                             # 转录当前对话
-                            emotion,current_transcription = transcribe_audio(temp_conversation_path)
+                            #emotion,current_transcription = transcribe_audio(temp_conversation_path)
+                            emotion,current_transcription = transcribe_audio(OUTPUT_FILENAME)
                             if current_transcription and current_transcription.strip():  # 确保转录结果不为空
                                 all_transcriptions.append(current_transcription)
                                 print(f"当前对话转录完成: {current_transcription}")
@@ -481,7 +623,7 @@ def stop_recording(request_data: Dict = Body(...)):
     # 获取参数user_id
     user_id = request_data.get("user_id", "john")
 
-    # 保存所有的对话信息到向量数据库中
+    # 保存所的对话信息向量数据库中
     mu.save_interaction_to_vector_store_timing()
 
     if is_recording:

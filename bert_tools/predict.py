@@ -1,27 +1,31 @@
 import os.path
 import re
 import torch
-from torch.utils.data import DataLoader, SequentialSampler
 from my_tools.utils import load_checkpoint
-from my_tools.data_load import MyDataLoad, MyDataSet
+from my_tools.data_load import MyDataLoad
 # from my_tools.model3 import DIETClassifier
 from my_tools.model import DIETClassifier
-from my_tools.utils import get_entity, get_entity_triple
+from my_tools.utils import get_entity_triple, get_entity
 from my_config import MyConfig
+import openvino as ov
 
 params = MyConfig()
+core = ov.Core()
 
 
 class Predict(MyDataLoad):
-    def __init__(self, model_path):
+    def __init__(self, model_path, pt_device="cpu" ,ov_device="AUTO"):
         """
         初始化
         :param model_path: 训练后的模型路径
+        :param pt_device: pytorch device, 一般可选"cpu", "cuda",建议cpu
+        :param ov_device: openvino device，一般可以选"AUTO"，"CPU", "GPU", "NPU"
         """
         super().__init__()
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu")
+        self.device = pt_device
         self.model = None
+        self.ov_device = ov_device
+        self.use_openvino = False
         self.load_model(model_path)
         self.max_seq_len = params.model_info["max_seq_len"]
         # self.tokenizer = None
@@ -80,33 +84,20 @@ class Predict(MyDataLoad):
         print("加载模型中")
         if model_path.endswith(".tar"):
             self.model, _, _ = load_checkpoint(model_path)
+            self.model.to(self.device)
+            self.model.eval()
+        # 使用openvino
+        elif model_path.endswith(".xml"):
+            ov_model = core.read_model(model_path)
+            self.model = core.compile_model(ov_model, self.ov_device)
+            self.use_openvino = True
         else:
-            # json_path = os.path.join(params.pre_model_path, "config.json")
-            # bert_config = BertConfig.from_json_file(json_file=json_path)
-            # weights = torch.load(model_path, map_location=torch.device("cpu"))
-            # for v2/v3
-            # sparse = params.model_info["use_sparse"]
-            # use_fp16 = params.model_info["use_fp16"]
-            # self.model = DIETClassifier(bert_config, weights, sparse, use_fp16)
-            # for v1
             state_dict = torch.load(model_path, map_location=torch.device("cpu"))
             self.model = DIETClassifier.from_pretrained(params.pre_model_path)
             self.model.load_state_dict(state_dict)
-        self.model.to(self.device)
-        self.model.eval()
+            self.model.to(self.device)
+            self.model.eval()
         print("加载模型完毕")
-
-    def get_dataloader(self, text_list: list, batch_size=64):
-        feature = {"text": text_list}
-        features = self.convert_data_list("预测", feature, True)
-        my_dataset = MyDataSet(features)
-        data_sample = SequentialSampler(my_dataset)
-        my_dataloader = DataLoader(
-            my_dataset,
-            sampler=data_sample,
-            batch_size=batch_size,
-        )
-        return my_dataloader
 
     @staticmethod
     def get_number(str1: str):
@@ -129,10 +120,10 @@ class Predict(MyDataLoad):
             except Exception:
                 return None
     
-    def evaluate(self, valid_load1, threshold: float=0.8):
+    def evaluate(self, text_list: list, threshold: float=0.8):
         """
         评估模型
-        :param valid_load1: 待验证的数据
+        :param text_list: 待验证的数据
         :param threshold: 阀值，大于该数值才认为是正样本
         :return:
         """
@@ -144,63 +135,79 @@ class Predict(MyDataLoad):
         probability_pred_list = [] # 收集意图预测概率
         entity_pred_info_list = []  # 收集实体最终预测结果
         # 取消打印进度条显示
-        for data in valid_load1:
-            data = {
-                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
-                for k, v in data.items()
-
-            }
-            with torch.no_grad():
-                output_data = self.model(
-                    input_ids=data["input_ids"],
-                    attention_mask=data["attention_mask"],
-                    token_type_ids=data["token_type_ids"],
-                )
-                start_entity_logits, end_entity_logits, intent_logits = \
-                    output_data["logits"]
-                start_entity_pred = torch.argmax(start_entity_logits, dim=-1)
-                end_entity_pred = torch.argmax(end_entity_logits, dim=-1)
-                start_entity_pred = start_entity_pred.detach().cpu().numpy()
-                end_entity_pred = end_entity_pred.detach().cpu().numpy()
-                # 获取token实际长度
-                length_list = data["length"].detach().cpu().numpy().tolist()
-
-                # -- 获取实体信息 -- #
-                for idx in range(start_entity_pred.shape[0]):
-                    length = length_list[idx]
-                    temp_start_entity_pred = start_entity_pred[idx][1: length + 1]
-                    temp_end_entity_pred = end_entity_pred[idx][1: length + 1]
-
-                    # 收集实体初步预测值
-                    temp_entity_pred = get_entity_triple(
-                        temp_start_entity_pred,
-                        temp_end_entity_pred,
+        for text in text_list:
+            # 将text打包成token,并且截断，填充pad, 为了方便起见返回offset用于生成每个token的实体类型
+            data = self.tokenizer(
+                text,
+                return_tensors="pt",
+                return_offsets_mapping=True,
+                padding="max_length",
+                truncation=True,
+                max_length=params.model_info["max_seq_len"]
+            )
+            if not self.use_openvino:
+                with torch.no_grad():
+                    (
+                        start_entity_logits,
+                        end_entity_logits,
+                        intent_logits
+                    ) = self.model(
+                        input_ids=data["input_ids"],
+                        attention_mask=data["attention_mask"],
+                        token_type_ids=data["token_type_ids"],
                     )
-                    # 获取筛选后实体，也就是刨除Text之类的实体信息
-                    if len(temp_entity_pred) > 0:
-                        text = data["text"][idx]
-                        offset_list = data["offset_mapping"][idx][1:].detach().cpu()\
-                            .numpy().tolist()
-                        temp_list = get_entity(
-                            text, offset_list, temp_entity_pred, id2entity)
-                        entity_pred_info_list.append(temp_list)
-                    else:
-                        entity_pred_info_list.append([])
-                    entity_pred_list.append(temp_entity_pred)
+            else:
+                outputs = self.model((
+                    data["input_ids"],
+                    data["attention_mask"],
+                    data["token_type_ids"],
+                ))
+                start_entity_logits = torch.tensor(outputs[0])
+                end_entity_logits = torch.tensor(outputs[1])
+                intent_logits = torch.tensor(outputs[2])
+            start_entity_pred = torch.argmax(start_entity_logits, dim=-1)
+            end_entity_pred = torch.argmax(end_entity_logits, dim=-1)
+            start_entity_pred = start_entity_pred.detach().cpu().numpy()
+            end_entity_pred = end_entity_pred.detach().cpu().numpy()
+            # 获取token实际长度
+            # length_list = data["length"].detach().cpu().numpy().tolist()
+            length_list = data["attention_mask"].sum(axis=1)
 
-                # -- 收集意图信息 -- #
-                # 如果是训练或者验证集，直接argmax,取所有最高分
-                # 如果用阀值的话，可能变成多分类问题, 暂时只考虑单分类即可
-                intent_logits = torch.squeeze(intent_logits, dim=1)
-                probabilities =  torch.softmax(intent_logits, dim=1)
-                for i in range(intent_logits.size(0)):
-                    probability_tensor = probabilities[i]
-                    max_id = torch.argmax(probability_tensor).item()
-                    probability = torch.max(probability_tensor).item()
-                    if probability < threshold:
-                        max_id = -100
-                    intent_pred_list.append(max_id)
-                    probability_pred_list.append(probability)
+            # -- 获取实体信息 -- #
+            for idx in range(start_entity_pred.shape[0]):
+                length = length_list[idx]
+                temp_start_entity_pred = start_entity_pred[idx][1: length + 1]
+                temp_end_entity_pred = end_entity_pred[idx][1: length + 1]
+
+                # 收集实体初步预测值
+                temp_entity_pred = get_entity_triple(
+                    temp_start_entity_pred,
+                    temp_end_entity_pred,
+                )
+                # 获取筛选后实体，也就是刨除Text之类的实体信息
+                if len(temp_entity_pred) > 0:
+                    offset_list = data["offset_mapping"][idx][1:].detach().cpu()\
+                        .numpy().tolist()
+                    temp_list = get_entity(
+                        text, offset_list, temp_entity_pred, id2entity)
+                    entity_pred_info_list.append(temp_list)
+                else:
+                    entity_pred_info_list.append([])
+                entity_pred_list.append(temp_entity_pred)
+
+            # -- 收集意图信息 -- #
+            # 如果是训练或者验证集，直接argmax,取所有最高分
+            # 如果用阀值的话，可能变成多分类问题, 暂时只考虑单分类即可
+            intent_logits = torch.squeeze(intent_logits, dim=1)
+            probabilities =  torch.softmax(intent_logits, dim=1)
+            for i in range(intent_logits.size(0)):
+                probability_tensor = probabilities[i]
+                max_id = torch.argmax(probability_tensor).item()
+                probability = torch.max(probability_tensor).item()
+                if probability < threshold:
+                    max_id = -100
+                intent_pred_list.append(max_id)
+                probability_pred_list.append(probability)
         return {
             "intent_pred": intent_pred_list,
             "probability_pred": probability_pred_list,
@@ -241,7 +248,7 @@ class Predict(MyDataLoad):
         else:
             return {"func": None, "args": {}}
 
-    def predict(self, text_list: list, threshold: float = 0.8, batch_size=64):
+    def predict(self, text_list: list, threshold: float = 0.9):
         """
         预测学术要求分类
         :param text_list: 文本信息，每段一个文本
@@ -249,9 +256,8 @@ class Predict(MyDataLoad):
         :param batch_size: 批处理数据量，理论上设置越大则速度越快
         :return:
         """
-        my_dataloader = self.get_dataloader(text_list, batch_size=min(batch_size, len(text_list)))
         label_result = self.evaluate(
-            my_dataloader,
+            text_list,
             threshold=threshold
         )
         intent_list = label_result["intent_pred"]
@@ -307,13 +313,15 @@ if __name__ == '__main__':
     from pprint import pprint
     import time
     now_dir = os.path.dirname(os.path.abspath(__file__))
-    # old model v2
-    # model_path1 = os.path.join(now_dir, "out_model", "best.pth.tar")
-    # new old v3
-    model_path1 = os.path.join(now_dir, "out_model", "best.pth")
+    # use_pytorch
+    # model_path1 = os.path.join(now_dir, "out_model", "best.pth")
+    # use openvino
+    model_path1 = os.path.join(now_dir, "out_model", "bert_ov", "bert.xml")
     predict = Predict(model_path1)
     text_list1 = [
         "音量设置为50",
+        "帮我打开任务管理器",
+        "你的名字是？"
     ]
     et = time.time()
     result_data2 = predict.predict(text_list1)

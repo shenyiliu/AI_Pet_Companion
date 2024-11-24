@@ -41,7 +41,7 @@ class DIETClassifier(BertPreTrainedModel):
             token_type_ids=None,
             intent_id=None,
             start_entity_ids=None,
-            end_entity_ids=None
+            end_entity_ids=None,
     ):
         """
         training model if entities_labels and intent_labels are passed, else inference
@@ -67,8 +67,8 @@ class DIETClassifier(BertPreTrainedModel):
         pooled_output = outputs[0][:, :1]  # 取最后一层作为分类用
         pooled_output = self.dropout(pooled_output)
 
-        start_entities_logits = self.start_entities_classifier(sequence_output)
-        end_entities_logits = self.end_entities_classifier(sequence_output)
+        start_entity_logits = self.start_entities_classifier(sequence_output)
+        end_entity_logits = self.end_entities_classifier(sequence_output)
         intent_logits = self.intents_classifier(pooled_output)
 
         entity_loss = None
@@ -77,12 +77,12 @@ class DIETClassifier(BertPreTrainedModel):
             # Only keep active parts of the loss
             if attention_mask is not None:
                 active_loss = attention_mask.reshape(-1) == 1
-                active_start_logits = start_entities_logits.view(
+                active_start_logits = start_entity_logits.view(
                     -1, self.num_entities
                 )
                 active_start_logits = active_start_logits[active_loss]
 
-                active_end_logits = end_entities_logits.view(
+                active_end_logits = end_entity_logits.view(
                     -1, self.num_entities
                 )
                 active_end_logits = active_end_logits[active_loss]
@@ -107,11 +107,11 @@ class DIETClassifier(BertPreTrainedModel):
                 )
             else:
                 start_entities_loss = entities_loss_fct(
-                    start_entities_logits.view(-1, self.num_entities),
+                    start_entity_logits.view(-1, self.num_entities),
                     start_entity_ids.view(-1)
                 )
                 end_entities_loss = entities_loss_fct(
-                    end_entities_logits.view(-1, self.num_entities),
+                    end_entity_logits.view(-1, self.num_entities),
                     end_entity_ids.view(-1)
                 )
             entity_loss = (start_entities_loss + end_entities_loss) / 2
@@ -129,10 +129,13 @@ class DIETClassifier(BertPreTrainedModel):
             loss = entity_loss * 0.8 + intent_loss * 0.2
         else:
             loss = None
-
-        return dict(
-            entity_loss=entity_loss,
-            intent_loss=intent_loss,
-            loss=loss,
-            logits=(start_entities_logits, end_entities_logits, intent_logits)
-        )
+        # train
+        if entity_loss is not None and intent_loss is not None and loss is not None:
+            return (entity_loss, intent_loss, loss)
+        # predict
+        else:
+            return (
+                start_entity_logits,
+                end_entity_logits,
+                intent_logits
+            )

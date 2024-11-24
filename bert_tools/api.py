@@ -11,13 +11,17 @@ from predict import Predict
 
 now_dir = os.path.dirname(os.path.abspath(__file__))
 app = FastAPI()
-predict = Predict(os.path.join("out_model", "best.pth"))
+# pytorch
+# predict = Predict(os.path.join("out_model", "best.pth"))
+# openvino
+model_path1 = os.path.join(now_dir, "out_model", "bert_ov", "bert.xml")
+predict = Predict(model_path1)
 
 
 
 class Data(BaseModel):
     text_list: List[Text]
-    threshold: float = 0.8
+    threshold: float = 0.9
 
 
 @app.post("/tool_classify/")

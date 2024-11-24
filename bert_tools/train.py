@@ -42,13 +42,15 @@ def evaluate(model1, device1, valid_load1, is_predict=False):
 
         }
         with torch.no_grad():
-            output_data = model1(
+            (
+                start_entity_logits,
+                end_entity_logits,
+                intent_logits
+            ) = model1(
                 input_ids=data["input_ids"],
                 attention_mask=data["attention_mask"],
                 token_type_ids=data["token_type_ids"],
             )
-            start_entity_logits, end_entity_logits, intent_logits = \
-                output_data["logits"]
             start_entity_pred = torch.argmax(start_entity_logits, dim=-1)
             end_entity_pred = torch.argmax(end_entity_logits, dim=-1)
             start_entity_pred = start_entity_pred.detach().cpu().numpy()
@@ -205,7 +207,11 @@ def train_and_evaluate(
             start_entity_ids = data["start_entity_ids"].to(device1)
             end_entity_ids = data["end_entity_ids"].to(device1)
             intent_id = data["intent_id"].to(device1)
-            output_dict = model1(
+            (
+                entity_loss,
+                intent_loss,
+                loss,
+            ) = model1(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
                 token_type_ids=token_type_ids,
@@ -213,9 +219,6 @@ def train_and_evaluate(
                 end_entity_ids=end_entity_ids,
                 intent_id=intent_id,
             )
-            loss = output_dict["loss"]
-            entity_loss = output_dict["entity_loss"]
-            intent_loss = output_dict["intent_loss"]
             if n_gpu1 > 0:
                 loss = loss.mean()
             if gradient_acc_steps > 1:

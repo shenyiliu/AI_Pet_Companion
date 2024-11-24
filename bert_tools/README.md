@@ -9,8 +9,18 @@
    ```
 
 5. 将训练好的模型文件best.pth，放到当前目录的output_model文件夹
-   - 训练好的模型：通过百度网盘分享的文件：链接：https://pan.baidu.com/s/1OnpsSNmQ-CA5_VF8CdC-ig?pwd=mxj7 提取码：mxj7）
-6. 部署api
+   - 训练好的模型：通过百度网盘分享的文件：链接：https://pan.baidu.com/s/1OnpsSNmQ-CA5_VF8CdC-ig?pwd=mxj7 提取码：mxj7
+
+6. 运行convert_to_ov.py，将pytorch模型转openvino模型。
+   ```bash
+   python convert_to_ov.py
+   ```
+7. 测试效果。
+   ```bash
+   python predict.py
+   ```
+   
+8. 部署api
    ```bash
    uvicorn api:app --host 127.0.0.1  --port 5518 --workers 1
    ```

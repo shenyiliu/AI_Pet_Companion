@@ -10,6 +10,10 @@ params = MyConfig()
 now_dir = os.path.dirname(os.path.abspath(__file__))
 output_model_dir = os.path.join(now_dir, "out_model")
 model_path = os.path.join(output_model_dir, "best.pth")
+output_onnx_dir = os.path.join(output_model_dir, "bert_onnx")
+if not os.path.exists(output_onnx_dir):
+    os.mkdir(output_onnx_dir)
+output_onnx_path = os.path.join(output_onnx_dir, "bert.onnx")
 output_ov_dir = os.path.join(output_model_dir, "bert_ov")
 if not os.path.exists(output_ov_dir):
     os.mkdir(output_ov_dir)
@@ -36,8 +40,12 @@ attention_mask = data["attention_mask"]
 token_type_ids = data["token_type_ids"]
 example_input = (input_ids, attention_mask, token_type_ids)
 # print("example_input: ", example_input)
-
-ov_model = ov.convert_model(model, example_input=example_input)
+# export to onnx to get static model
+torch.onnx.export(model, example_input, output_onnx_path)
+print("onnx saved in ", output_onnx_path)
+# convert onnx to ov_model
+# ov_model = ov.convert_model(model, example_input=example_input)
+ov_model = ov.convert_model(output_onnx_path)
 # save result
 ov.save_model(ov_model, output_ov_path)
 print("openvino model save in ", ov_model)

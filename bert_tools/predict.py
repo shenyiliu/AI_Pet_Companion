@@ -317,7 +317,7 @@ if __name__ == '__main__':
     # model_path1 = os.path.join(now_dir, "out_model", "best.pth")
     # use openvino
     model_path1 = os.path.join(now_dir, "out_model", "bert_ov", "bert.xml")
-    predict = Predict(model_path1)
+    predict = Predict(model_path1, ov_device="NPU")
     text_list1 = [
         "音量设置为50",
         "帮我打开任务管理器",

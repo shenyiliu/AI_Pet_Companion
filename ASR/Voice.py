@@ -270,7 +270,7 @@ def play_start_sound():
         pygame.mixer.quit()
         
     except Exception as e:
-        print(f"播放提示音��错: {e}")
+        print(f"播放提示音出错: {e}")
 
 def process_audio():
     """处理音频的独立线程函数"""

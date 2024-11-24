@@ -69,7 +69,7 @@ OUTPUT_FILENAME = "output.wav"  # 输出音频文件名
 flage = True
 
 def record_audio():
-    global flage
+    global flage, tts_playing
     print("开始record_audio函数，当前flage状态:", flage)  # 调试信息
     try:
         # 设置pyaudio录音对象
@@ -89,6 +89,11 @@ def record_audio():
         frames = []
         
         while flage:
+            # 如果正在播放TTS，暂停录音
+            if tts_playing:
+                time.sleep(0.1)
+                continue
+                
             data = stream.read(CHUNK, exception_on_overflow=False)
             frames.append(data)
             
@@ -328,6 +333,7 @@ def TTS_stream(context: str):
         # 终止pyaudio
         p.terminate()
         tts_playing = False  # 播放结束
+        print("TTS播放结束，恢复录音")
 
 # TTS openvoice API
 def TTS_play_audio_stream(context: str):
@@ -366,6 +372,7 @@ def TTS_play_audio_stream(context: str):
     tts_playing = False  # 播放结束    
     # 清理
     pygame.mixer.quit() 
+    print("TTS播放结束，恢复录音")
 
 # 播放音频的函数
 def play_start_sound():
@@ -401,7 +408,7 @@ def play_start_sound():
 
 def process_audio():
     """处理音频的独立线程函数"""
-    global detected_wake_word, audio_queue, last_speech_time, is_recording
+    global detected_wake_word, audio_queue, last_speech_time, is_recording, tts_playing
     
     # 确保audio目录存在
     temp_wake_word_path = os.path.join("audio", "temp_wake_word.wav")
@@ -411,6 +418,11 @@ def process_audio():
     all_transcriptions = []  # 存储所有对话的转录结果
     
     while is_recording:
+        # 如果正在播放TTS，暂停处理
+        if tts_playing:
+            time.sleep(0.1)
+            continue
+            
         if len(audio_queue) > 0:
             temp_audio = audio_queue.pop(0)
             

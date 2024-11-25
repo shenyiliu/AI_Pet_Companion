@@ -425,7 +425,7 @@ def capture_screen():
 
 # 9.获取系统基本信息
 # 比如 CPU、内存使用情况。
-def get_system_info() -> str:
+def get_system_info():
     """
     获取Windows系统的基本信息，包括CPU、内存和磁盘使用情况
     :return: 包含系统信息的字符串
@@ -465,8 +465,8 @@ def get_system_info() -> str:
                 continue
 
         # 格式化输出信息
-        system_info = f"CPU信息:核心数: {cpu_count}个,当前使用率: {cpu_percent}%,当前频率: {round(cpu_freq.current, 2)} MHz "
-        system_info += f"内存信息:已用内存: {used_memory} GB,可用内存: {available_memory} GB,内存使用率: {memory_percent}%"
+        system_info = f"芯片核心数有{cpu_count}个,当前芯片使用率是百分之{cpu_percent},当前芯片频率是{round(cpu_freq.current, 2)}赫兹"
+        #system_info += f"已用内存{used_memory},可用内存{available_memory}寄必,内存使用率百分之{memory_percent}"
         return Response.success(system_info) 
 
     except Exception as e:
@@ -594,7 +594,7 @@ def camera_to_vLLM(enable: bool):
         print("摄像头已关闭")
 
 
-
+import Voice as vo
 
 
 if __name__ == "__main__":
@@ -629,7 +629,7 @@ if __name__ == "__main__":
 
     # 9.测试获取系统信息函数
     print(get_system_info()["message"])
-
+    vo.TTS_play_audio_stream(get_system_info()["message"])
     # 10.测试控制摄像头开关并拍照
     # print(control_camera(True))   # 打开摄像头并拍照
 

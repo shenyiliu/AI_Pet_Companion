@@ -14,7 +14,7 @@ core = ov.Core()
 
 
 class Predict(MyDataLoad):
-    def __init__(self, model_path, pt_device="cpu" ,ov_device="AUTO"):
+    def __init__(self, model_path, pt_device="cpu" ,ov_device="NPU"):
         """
         初始化
         :param model_path: 训练后的模型路径

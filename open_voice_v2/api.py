@@ -8,7 +8,7 @@ import re
 import uvicorn
 import shutil
 import nltk
-from pathlib import Path
+# from pathlib import Path
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -20,6 +20,7 @@ now_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(now_dir)
 repo_dir = os.path.join(project_dir, "OpenVoice")
 sys.path.append(repo_dir)
+sys.path.append(project_dir)
 download_dir = os.path.join(project_dir, "download")
 output_dir = os.path.join(project_dir, "output")
 
@@ -33,11 +34,12 @@ torch_hub_dir = os.path.join(torch_hub_local, "hub")
 torch.hub.set_dir(torch_hub_dir)
 nltk.data.path.append(os.path.join(download_dir, "nltk_data"))
 
-from melo.api import TTS
+# from melo.api import TTS
 from openvoice.api import ToneColorConverter, OpenVoiceBaseClass
 import openvoice.se_extractor as se_extractor
+from open_voice_v2.utils import OpenVinoTTS, core
 
-core = ov.Core()
+# core = ov.Core()
 
 output_ov_path = os.path.join(output_dir, "OpenVoice_v2_ov")
 assert os.path.exists(download_dir)
@@ -49,6 +51,9 @@ converter_dir = os.path.join(checkpoint_dir, "converter")
 assert os.path.exists(converter_dir)
 zh_tts_model_dir = os.path.join(checkpoint_dir, "myshell-ai", "MeloTTS-Chinese")
 en_tts_model_dir = os.path.join(checkpoint_dir, "myshell-ai", "MeloTTS-English-v2")
+en_tts_ov_path = os.path.join(output_ov_path, "openvoice_en_tts.xml")
+zh_tts_ov_path = os.path.join(output_ov_path, "openvoice_zh_tts.xml")
+voice_convert_ov_path = os.path.join(output_ov_path, "openvoice_tone_conversion.xml")
 # enable_chinese_lang = True
 pt_device = "cpu"
 ov_device = "AUTO"
@@ -58,40 +63,24 @@ zh_source_se = torch.load(zh_source_se_path, map_location=pt_device)
 en_source_se = torch.load(en_source_se_path, map_location=pt_device)
 
 print("load chinese speaker")
-zh_tts_model = TTS(
+zh_tts_model = OpenVinoTTS(
     language="ZH",
-    device=pt_device,
-    config_path=os.path.join(zh_tts_model_dir, "config.json"),
-    ckpt_path=os.path.join(zh_tts_model_dir, "checkpoint.pth")
+    ov_xml_path=zh_tts_ov_path,
+    pt_device=pt_device,
+    ov_device=ov_device,
+    config_path=os.path.join(zh_tts_model_dir, "config.json")
 )
 print("load english speaker")
-en_tts_model = TTS(
-    language="EN_NEWEST",
-    device=pt_device,
-    config_path=os.path.join(en_tts_model_dir, "config.json"),
-    ckpt_path=os.path.join(en_tts_model_dir, "checkpoint.pth")
+en_tts_model = OpenVinoTTS(
+    language="EN",
+    ov_xml_path=en_tts_ov_path,
+    pt_device=pt_device,
+    ov_device=ov_device,
+    config_path=os.path.join(en_tts_model_dir, "config.json")
 )
 
 
 print("load tone...")
-
-
-# url = "https://github.com/snakers4/silero-vad/zipball/v3.0"
-
-#
-# zip_filename = "v3.0.zip"
-# output_path = torch_hub_dir / "v3.0"
-# if not (torch_hub_dir / zip_filename).exists():
-#     download_file(url, directory=torch_hub_dir, filename=zip_filename)
-#     zip_ref = zipfile.ZipFile((torch_hub_dir / zip_filename).as_posix(), "r")
-#     zip_ref.extractall(path=output_path.as_posix())
-#     zip_ref.close()
-#
-# v3_dirs = [d for d in output_path.iterdir() if "snakers4-silero-vad" in d.as_posix()]
-# if len(v3_dirs) > 0 and not (torch_hub_dir / "snakers4_silero-vad_v3.0").exists():
-#     v3_dir = str(v3_dirs[0])
-#     os.rename(str(v3_dirs[0]), (torch_hub_dir / "snakers4_silero-vad_v3.0").as_posix())
-
 tone_color_converter = ToneColorConverter(
     os.path.join(converter_dir, "config.json"),
     device=pt_device,
@@ -99,41 +88,6 @@ tone_color_converter = ToneColorConverter(
 tone_color_converter.load_ckpt(
     os.path.join(converter_dir, "checkpoint.pth")
 )
-
-
-def get_pathched_infer(ov_model: ov.Model, device: str) -> callable:
-    compiled_model = core.compile_model(ov_model, device)
-
-    def infer_impl(
-       x,
-       x_lengths,
-       speakers,
-       tones,
-       lang_ids,
-       bert,
-       ja_bert,
-       noise_scale,
-       length_scale,
-       noise_scale_w,
-       sdp_ratio,
-       max_len=None,
-    ):
-        ov_output = compiled_model((
-            x,
-            x_lengths,
-            speakers,
-            tones,
-            lang_ids,
-            bert.contiguous(),
-            ja_bert.contiguous(),
-            noise_scale,
-            length_scale,
-            noise_scale_w,
-            sdp_ratio
-        ))
-        return (torch.tensor(ov_output[0]),)
-
-    return infer_impl
 
 
 def get_patched_voice_conversion(ov_model: ov.Model, device: str) -> callable:
@@ -146,29 +100,13 @@ def get_patched_voice_conversion(ov_model: ov.Model, device: str) -> callable:
     return voice_conversion_impl
 
 
-EN_TTS_IR = os.path.join(output_ov_path, "openvoice_en_tts.xml")
-ZH_TTS_IR = os.path.join(output_ov_path, "openvoice_zh_tts.xml")
-VOICE_CONVERTER_IR = os.path.join(output_ov_path, "openvoice_tone_conversion.xml")
 
-# read ov model
-print("load openvino model...")
-paths = [EN_TTS_IR, VOICE_CONVERTER_IR, ZH_TTS_IR]
-ov_models = [core.read_model(ov_path) for ov_path in paths]
-ov_en_tts, ov_voice_conversion, ov_zh_tts = ov_models
-print("load openvino model finish")
-
-print("patch english speaker infer...")
-en_tts_model.model.infer = get_pathched_infer(ov_en_tts, ov_device)
-print("patch english speaker infer finish")
 print("patch tone convert infer...")
+# read ov model
+ov_voice_conversion = core.read_model(voice_convert_ov_path)
 tone_color_converter.model.voice_conversion = get_patched_voice_conversion(
     ov_voice_conversion, ov_device)
 print("patch tone convert infer finish")
-print("patch chinese speaker infer...")
-zh_tts_model.model.infer = get_pathched_infer(
-    ov_zh_tts, ov_device
-)
-print("patch chinese speaker infer finish")
 
 # 启动fastapi
 app = FastAPI()
@@ -277,14 +215,14 @@ def predict(
             vad=True
         )
         se_cache_dict[audio_file_path] = target_se
-    et1 = time.time()
-    print("[INFO] get tone duration: ", et1 - st)
+    se_time = time.time()
+    print("[INFO] get tone duration: ", se_time - st)
     audio_tts_path = f"{audio_output_dir}/tts.wav"
     # 文本转语音
     print("[INFO] Begin TTS...")
     tts_model.tts_to_file(prompt, speaker_id, audio_tts_path)
-    et2 = time.time()
-    print("[INFO] TTS duration: ", et2 - st)
+    tts_time = time.time()
+    print("[INFO] TTS duration: ", tts_time - se_time)
     save_path = f"{audio_output_dir}/output.wav"
     # 下面这一行应该是固定的
     encode_message = "@MyShell"
@@ -297,22 +235,15 @@ def predict(
         output_path=save_path,
         message=encode_message,
     )
-    et3 = time.time()
-    print("[INFO] tone color clone duration: ", et3 - st)
+    clone_time = time.time()
+    print("[INFO] tone color clone duration: ", clone_time - tts_time)
+    print("[INFO] total duration: ", clone_time - st)
     text_hint = "Get response successfully \n"
     return {
         "status": "success",
         "file_path": save_path,
         "message": text_hint
     }
-    # except Exception as e:
-    #     text_hint = f"[ERROR] Get target tone color error {str(e)} \n"
-    #     return {
-    #         "status": "failed",
-    #         "file_path": None,
-    #         "message": text_hint
-    #    }
-
 
 
 

@@ -59,14 +59,18 @@
    - 百度网盘链接：https://pan.baidu.com/s/1WKUtCMcqyxATRy6PQsFoUg?pwd=urbc 提取码：urbc 
    - 123网盘链接：https://www.123865.com/s/oEqDVv-SxBo?提取码:CnAJ
 
-7. 运行`open_voice_v2/convert_to_ov.py`，将pytorch代码转成openvino专用格式。
+7. 将[bert-base-multilingual-uncased](https://huggingface.co/google-bert/bert-base-multilingual-uncased)和[bert-base-uncased](https://huggingface.co/google-bert/bert-base-uncased)放到本项目根目录下的`download`文件夹。
+   - 百度网盘链接：https://pan.baidu.com/s/1T9LKFeCgWssBTda3zz9m_g?pwd=6px4  提取码：6px4 
+
+
+8. 运行`open_voice_v2/convert_to_ov.py`，将pytorch代码转成openvino专用格式。
    ```bash
    python open_voice_v2/convert_to_ov.py
    ```
-8. 对于Win10/Win11系统，打开设置，搜索开发者设置，勾选`开发者模式`。不开启则下面运行api会报没有权限创建软链接。[参考链接](https://www.scivision.dev/windows-symbolic-link-permission-enable/)
+9. 对于Win10/Win11系统，打开设置，搜索开发者设置，勾选`开发者模式`。不开启则下面运行api会报没有权限创建软链接。[参考链接](https://www.scivision.dev/windows-symbolic-link-permission-enable/)
 ![development_mode](../images/development_mode.png)
 
-9. 输入下面的命令，运行api（该步骤会从huggingface下载一些bert模型，注意你的网络）
+10. 输入下面的命令，运行api
    ```bash
    cd open_voice_v2
    uvicorn api:app --host 127.0.0.1  --port 5059 --workers 1

@@ -31,7 +31,7 @@ from open_voice_v2.utils import OVOpenVoiceTTS, OVOpenVoiceConverter
 from openvoice.api import ToneColorConverter, OpenVoiceBaseClass
 from openvoice import se_extractor
 
-core = ov.Core()
+# core = ov.Core()
 output_ov_path = os.path.join(output_dir, "OpenVoice_v2_ov")
 assert os.path.exists(download_dir)
 checkpoint_dir = os.path.join(download_dir, "OpenVoice", "checkpoints_v2")

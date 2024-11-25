@@ -27,9 +27,8 @@ torch.hub.set_dir(torch_hub_dir)
 nltk.data.path.append(os.path.join(download_dir, "nltk_data"))
 
 from melo.api import TTS
-from open_voice_v2.utils import OVOpenVoiceTTS, OVOpenVoiceConverter
+from open_voice_v2.utils import OVOpenVoiceTTS, OVOpenVoiceConverter, core
 from openvoice.api import ToneColorConverter, OpenVoiceBaseClass
-from openvoice import se_extractor
 
 # core = ov.Core()
 output_ov_path = os.path.join(output_dir, "OpenVoice_v2_ov")

@@ -1,26 +1,28 @@
 {
     "intent2id": {
-        "AIRPLANE_MODE": 0,
-        "BATTERY": 1,
-        "BRIGHTNESS": 2,
-        "CALCULATOR": 3,
-        "POWER_SAVING_MODE": 4,
-        "SCREENSHOT": 5,
-        "SYSTEM_INFO": 6,
-        "TASK_MANAGER": 7,
-        "VIDEO_CHAT": 8,
-        "VOLUME": 9
+        "VOLUME": 0,
+        "POWER_SAVING_MODE": 1,
+        "VIDEO_CHAT": 2,
+        "BATTERY": 3,
+        "TASK_MANAGER": 4,
+        "CAMERA": 5,
+        "SCREENSHOT": 6,
+        "BRIGHTNESS": 7,
+        "AIRPLANE_MODE": 8,
+        "SYSTEM_INFO": 9,
+        "CALCULATOR": 10
     },
     "id2intent": {
-        "0": "AIRPLANE_MODE",
-        "1": "BATTERY",
-        "2": "BRIGHTNESS",
-        "3": "CALCULATOR",
-        "4": "POWER_SAVING_MODE",
-        "5": "SCREENSHOT",
-        "6": "SYSTEM_INFO",
-        "7": "TASK_MANAGER",
-        "8": "VIDEO_CHAT",
-        "9": "VOLUME"
+        "0": "VOLUME",
+        "1": "POWER_SAVING_MODE",
+        "2": "VIDEO_CHAT",
+        "3": "BATTERY",
+        "4": "TASK_MANAGER",
+        "5": "CAMERA",
+        "6": "SCREENSHOT",
+        "7": "BRIGHTNESS",
+        "8": "AIRPLANE_MODE",
+        "9": "SYSTEM_INFO",
+        "10": "CALCULATOR"
     }
 }

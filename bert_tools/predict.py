@@ -298,11 +298,9 @@ class Predict(MyDataLoad):
                     elif "小" in text:
                         data = {"func": "set_volume", "args": {"action": "-", "value": 10}}
                     else:
-                        message = "请问您要调到多大呢？"
                         data = {}
                 # 如果是单参数的意图
                 else:
-                    message = "请问您是要打开还是关闭呢？"
                     data = {}
             temp_dict = {"data": data, "message": message, "probability": round(probability, 4)}
             result_list.append(temp_dict)

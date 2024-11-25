@@ -2,10 +2,8 @@ import os
 import time
 import uvicorn
 from fastapi import FastAPI
-import math
 from pydantic import BaseModel
 from typing import List, Text
-from fastapi.responses import HTMLResponse
 from predict import Predict
 
 
@@ -16,7 +14,6 @@ app = FastAPI()
 # openvino
 model_path1 = os.path.join(now_dir, "out_model", "bert_ov", "bert.xml")
 predict = Predict(model_path1, ov_device="NPU")
-
 
 
 class Data(BaseModel):
@@ -37,7 +34,6 @@ def tool_classify(data: Data):
     et = time.time()
     during = round(et - st, 4)
     return {"data": data_list, "during": during}
-
 
 
 if __name__ == '__main__':

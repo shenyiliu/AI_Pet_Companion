@@ -36,27 +36,31 @@
 
 ### 训练日志
 ```bash
-valid metrics info:
-AIRPLANE_MODE/On: acc: 1.00000  recall: 1.00000 f1: 1.00000     number: 15
-BRIGHTNESS/To: acc: 1.00000     recall: 1.00000 f1: 1.00000     number: 13
-BRIGHTNESS/Add: acc: 1.00000    recall: 1.00000 f1: 1.00000     number: 3
-BRIGHTNESS/Sub: acc: 1.00000    recall: 1.00000 f1: 1.00000     number: 4
-CALCULATOR/Off: acc: 1.00000    recall: 1.00000 f1: 1.00000     number: 17
-CALCULATOR/On: acc: 1.00000     recall: 1.00000 f1: 1.00000     number: 18
-POWER_SAVING_MODE/On: acc: 0.83333      recall: 0.90909 f1: 0.86957     number: 11
-POWER_SAVING_MODE/Off: acc: 1.00000     recall: 1.00000 f1: 1.00000     number: 11
-TASK_MANAGER/On: acc: 1.00000   recall: 1.00000 f1: 1.00000     number: 5
-TASK_MANAGER/Off: acc: 1.00000  recall: 1.00000 f1: 1.00000     number: 5
-VIDEO_CHAT/Close: acc: 1.00000  recall: 1.00000 f1: 1.00000     number: 5
-VIDEO_CHAT/Open: acc: 1.00000   recall: 1.00000 f1: 1.00000     number: 6
-VOLUME/To: acc: 1.00000 recall: 0.93333 f1: 0.96552     number: 15
-VOLUME/Close: acc: 1.00000      recall: 1.00000 f1: 1.00000     number: 6
-VOLUME/Add: acc: 1.00000        recall: 1.00000 f1: 1.00000     number: 3
-VOLUME/Sub: acc: 0.83333        recall: 0.83333 f1: 0.83333     number: 6
-overall_recall: 0.97902
-overall_precision: 0.97902
-overall_f1: 0.97902
-intent acc : 100.00%
+2024-11-25 23:11:55,331:INFO: Epoch 28 / 100
+2024-11-25 23:12:04,475:INFO: loss: 0.00450 loss_entity: 0.00494 loss_intent: 0.00273 
+2024-11-25 23:12:04,950:INFO: valid metrics info:
+VOLUME/Close: acc: 0.85714	recall: 0.85714	f1: 0.85714	number: 7	
+VOLUME/Add: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 6	
+VOLUME/Sub: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 7	
+VOLUME/To: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 9	
+POWER_SAVING_MODE/On: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 13	
+POWER_SAVING_MODE/Off: acc: 0.92857	recall: 1.00000	f1: 0.96296	number: 13	
+VIDEO_CHAT/Off: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 13	
+VIDEO_CHAT/On: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 11	
+TASK_MANAGER/On: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 13	
+TASK_MANAGER/Off: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 12	
+CAMERA/On: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 18	
+CAMERA/Off: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 18	
+BRIGHTNESS/Add: acc: 0.81818	recall: 1.00000	f1: 0.90000	number: 9	
+BRIGHTNESS/To: acc: 0.95000	recall: 1.00000	f1: 0.97436	number: 19	
+BRIGHTNESS/Sub: acc: 0.88889	recall: 0.88889	f1: 0.88889	number: 9	
+AIRPLANE_MODE/On: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 10	
+CALCULATOR/Off: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 14	
+CALCULATOR/On: acc: 1.00000	recall: 1.00000	f1: 1.00000	number: 14	
+overall_recall: 0.99070	
+overall_precision: 0.97260	
+overall_f1: 0.98157	
+2024-11-25 23:12:04,950:INFO: intent acc : 100.00%
 ```
 
 ### 注：

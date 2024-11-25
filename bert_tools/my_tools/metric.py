@@ -32,7 +32,7 @@ class SpanEntityScore(object):
         predict_counter = Counter([x[0] for x in self.predicts])
         right_counter = Counter([x[0] for x in self.rights])
         for entity_id, true_num in true_counter.items():
-            entity_type = self.id2entity[str(entity_id)]
+            entity_type = self.id2entity[entity_id]
             predict_num = predict_counter.get(entity_id, 0)
             right_num = right_counter.get(entity_id, 0)
             recall, precision, f1 = self.compute(

@@ -465,9 +465,8 @@ def get_system_info() -> str:
                 continue
 
         # 格式化输出信息
-        system_info = f"""CPU信息:核心数: {cpu_count}个,当前使用率: {cpu_percent}%,当前频率: {round(cpu_freq.current, 2)} MHz
-        内存信息:已用内存: {used_memory} GB,可用内存: {available_memory} GB,内存使用率: {memory_percent}%
-        """
+        system_info = f"CPU信息:核心数: {cpu_count}个,当前使用率: {cpu_percent}%,当前频率: {round(cpu_freq.current, 2)} MHz "
+        system_info += f"内存信息:已用内存: {used_memory} GB,可用内存: {available_memory} GB,内存使用率: {memory_percent}%"
         return Response.success(system_info) 
 
     except Exception as e:
@@ -629,7 +628,7 @@ if __name__ == "__main__":
     #print(capture_screen())
 
     # 9.测试获取系统信息函数
-    #print(get_system_info())
+    print(get_system_info()["message"])
 
     # 10.测试控制摄像头开关并拍照
     # print(control_camera(True))   # 打开摄像头并拍照
@@ -641,7 +640,7 @@ if __name__ == "__main__":
     #print(get_brightness())
 
     # 13.
-    camera_to_vLLM(True)
+    #camera_to_vLLM(True)
 
 
 

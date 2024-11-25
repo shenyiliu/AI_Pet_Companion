@@ -11,6 +11,7 @@ repo_dir = os.path.join(project_dir, "OpenVoice")
 sys.path.append(repo_dir)
 from openvoice.api import BaseSpeakerTTS, ToneColorConverter, OpenVoiceBaseClass
 from melo.utils import get_text_for_tts_infer
+import unidic.download
 
 class OVOpenVoiceBase(torch.nn.Module):
     """

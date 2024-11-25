@@ -7,6 +7,7 @@ import time
 import re
 import uvicorn
 import shutil
+import nltk
 from pathlib import Path
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
@@ -19,13 +20,25 @@ now_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(now_dir)
 repo_dir = os.path.join(project_dir, "OpenVoice")
 sys.path.append(repo_dir)
-from openvoice.api import ToneColorConverter, OpenVoiceBaseClass
-import openvoice.se_extractor as se_extractor
-from melo.api import TTS
-
-core = ov.Core()
 download_dir = os.path.join(project_dir, "download")
 output_dir = os.path.join(project_dir, "output")
+
+# 设置从本地目录加载模型权重，方便网络不好的童鞋
+torch_hub_local = os.path.join(download_dir, "torch_hub_local")
+if not os.path.exists(torch_hub_local):
+    os.mkdir(torch_hub_local)
+os.environ["TORCH_HOME"] = torch_hub_local
+os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+torch_hub_dir = os.path.join(torch_hub_local, "hub")
+torch.hub.set_dir(torch_hub_dir)
+nltk.data.path.append(os.path.join(download_dir, "nltk_data"))
+
+from melo.api import TTS
+from openvoice.api import ToneColorConverter, OpenVoiceBaseClass
+import openvoice.se_extractor as se_extractor
+
+core = ov.Core()
+
 output_ov_path = os.path.join(output_dir, "OpenVoice_v2_ov")
 assert os.path.exists(download_dir)
 checkpoint_dir = os.path.join(download_dir, "OpenVoice", "checkpoints_v2")
@@ -61,17 +74,8 @@ en_tts_model = TTS(
 
 
 print("load tone...")
-torch_hub_local = os.path.join(download_dir, "torch_hub_local")
-if not os.path.exists(torch_hub_local):
-    os.mkdir(torch_hub_local)
-os.environ["TORCH_HOME"] = torch_hub_local
-torch_hub_dir = os.path.join(torch_hub_local, "hub")
-torch.hub.set_dir(torch_hub_dir)
 
 
-
-torch_hub_dir = Path(os.path.join(torch_hub_local, "hub"))
-torch.hub.set_dir(torch_hub_dir.as_posix())
 # url = "https://github.com/snakers4/silero-vad/zipball/v3.0"
 
 #

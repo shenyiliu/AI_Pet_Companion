@@ -18,4 +18,6 @@ torch==2.3.0
 nncf==2.11.0
 uvicorn
 fastapi
+fugashi
+nltk
 python-multipart

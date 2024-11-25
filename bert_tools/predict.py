@@ -73,6 +73,11 @@ class Predict(MyDataLoad):
             "VIDEO_CHAT": {
                 "fun": "camera_to_vLLM",
                 "entity": {"On": True, "Open": True, "Off": False, "Close": False}
+            },
+            "CAMERA": {
+                "fun": "control_camera",
+                "entity": {"On": True, "Open": True, "Off": False,
+                           "Close": False}
             }
         }
 

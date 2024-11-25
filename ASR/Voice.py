@@ -495,7 +495,8 @@ def process_audio():
                                     print("不调用工具")
                                     # 这里可以添加对话处理逻辑，比如调用 LLM 或 TTS
                                     # 调用Mem0_LLM_TTS
-                                    current_transcription = emotion+","+current_transcription
+                                    # 添加情绪
+                                    #current_transcription = emotion+","+current_transcription
 
                                     Mem0_LLM_TTS(current_transcription,"john")
 

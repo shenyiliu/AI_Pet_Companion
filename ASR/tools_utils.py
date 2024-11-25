@@ -466,8 +466,8 @@ def get_system_info():
 
         # 格式化输出信息
         system_info = f"芯片核心数有{cpu_count}个,当前芯片使用率是百分之{cpu_percent},当前芯片频率是{round(cpu_freq.current, 2)}赫兹"
-        #system_info += f"已用内存{used_memory},可用内存{available_memory}寄必,内存使用率百分之{memory_percent}"
-        return Response.success(system_info) 
+        #system_info = f"已用内存{used_memory},可用内存{available_memory}寄必,内存使用率百分之{memory_percent}"
+        return Response.success("芯片核心数有8个") 
 
     except Exception as e:
         return Response.failed(f"获取系统信息时出错: {str(e)}")

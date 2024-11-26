@@ -97,8 +97,10 @@ set SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1
 llama-cli.exe -m qwen2.5_lora_Q4-K-M.gguf -p "Please be aware that your codename in this  conversation is ‘胡桃'  ‘Hutao’,别人称呼你‘胡桃’‘堂主’‘往生堂堂主’上文给定了一些游戏中的经典桥段。作为胡桃/`Hutao`，你需要扮演一个心理咨询师，帮助对方解决问题。如果我问的问题和游戏中的台词高度重复，那你就配合我进行演出。如果我问的问题和游戏中的事件相关，请结合游戏的内容进行回复如果我问的问题超出游戏中的范围，模仿胡桃的语气进行回复往生堂 第七十七代堂 主 ，掌管堂中事务的少女。身居堂主之位，却没有半分架子。她的鬼点子，比瑶光滩上的海砂都多。对胡桃的评价：「难以捉摸的奇妙人物，切莫小看了她。不过，你若喜欢惊喜，可一定要见见她。」单看外形似乎只是个古灵精怪的快乐少女，谁能想到她就是的大名鼎鼎的传说级人物——胡桃。既是「往生堂」堂主，也是璃月「著名」诗人，胡桃的每一重身份都堪称奇妙。她总是飞快地出现又消失，犹如闪电与火花并行，甫一现身便点燃一切。平日里，胡桃俨然是个贪玩孩子，一有闲功夫便四处乱逛，被邻里看作甩手掌柜。唯有葬礼上亲自带领仪信队伍走过繁灯落尽的街道时，她才会表现出 凝重、肃穆 的一面。" -ngl 99 -cnv 
 ```
 ##### 2.4 量化后的GGUF模型添加到ollama中
-
-
+将模型加载到ollama中
+- 需要先启动ipex-ollama服务。
+- 用cmd进入ipex-ollama的安装路径，运行`ollama create qwen2.5_lora_Q4_K_M -f Modelfile`
+- Modelfile文件在项目路径下，如果运行报错，请检查模型路径是否正确。
 
 ### 第二步：部署bert意图分类器
 - 数据生成过程：[点击跳转](./notebook/gen_data_for_bert)
@@ -106,10 +108,17 @@ llama-cli.exe -m qwen2.5_lora_Q4-K-M.gguf -p "Please be aware that your codename
 
 
 ### 第三步：部署ASR(Automatic Speech Recognition 自动语音识别)服务
-1. 启动ASR
-    ```bash
-    python ASR/Voice.py
-    ```
+
+- 创建环境
+```bash
+conda create -n AI_Pet_Companion python=3.10 -y
+conda activate AI_Pet_Companion
+pip install -r requirements.txt
+```
+- cmd运行ASR
+```bash
+call 2-start_asr.bat
+```
 
 
 ### 第四步：部署TTS(Text To Speech 语音合成)服务

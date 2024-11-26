@@ -708,5 +708,7 @@ if __name__ == '__main__':
 
     # 初始化LLM
     # init_LLM(qwen_ov_model_dir)
-    
+    # 预加载多模态模型
+    tu.vLLM_init()
+
     uvicorn.run(app, host=args.host, port=args.port, workers=1)

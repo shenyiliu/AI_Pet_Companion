@@ -23,7 +23,17 @@ import wmi
 import os
 import sys
 import cv2
+import os
+from ov_qwen2_vl import OVQwen2VLModel
+from PIL import Image
+from pathlib import Path
+from transformers import AutoProcessor, AutoTokenizer
+from qwen_vl_utils import process_vision_info
+from transformers import TextStreamer
 
+ov_model = None
+processor = None
+tokenizer = None
 # 添加一个全局变量来跟踪摄像头状态
 _camera = None
 
@@ -586,15 +596,81 @@ def camera_to_vLLM(enable: bool):
         print(response["imagePath"])
         
         # 2.将图片传给qwenV模型响应
-        # TODO: 添加模型处理逻辑
-        
+        example_image_path = Path(response["imagePath"])
+        question = "描述一下图片内容，如果有人物，单独描述人物的表情和外貌特征，不要描述背景。"
+        result = generate_answer(question,example_image_path)
+        print("生成的回答:", result)
+        return result
+
+
     else:
         # 关闭摄像头
         response = control_camera(enable)
         print("摄像头已关闭")
+        return None
+    
+     
 
+# 预加载多模态模型
+def vLLM_init():
+    global ov_model,processor,tokenizer
+    pt_model_id = "Qwen2-VL-2B-Instruct"
+    now_dir = os.path.dirname(os.path.abspath(__file__))
+    project_dir = os.path.dirname(now_dir)
+    download_dir = os.path.join(project_dir, "download")
+    output_dir = os.path.join(project_dir, "output")
+    pt_model_dir = os.path.join(download_dir, pt_model_id)
+    ov_model_dir = os.path.join(output_dir, "Qwen2-VL-2B-Instruct-ov")
+    ov_model = OVQwen2VLModel(ov_model_dir, device="GPU")
 
-import Voice as vo
+    min_pixels = 256 * 28 * 28
+    max_pixels = 1280 * 28 * 28
+    processor = AutoProcessor.from_pretrained(pt_model_dir, min_pixels=min_pixels, max_pixels=max_pixels)
+
+    if processor.chat_template is None:
+        tokenizer = AutoTokenizer.from_pretrained(pt_model_dir)
+        processor.chat_template = tokenizer.chat_template
+
+# 模型推理
+def generate_answer(question:str,example_image_path:Path):
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "image": f"file://{example_image_path}",
+                },
+                {"type": "text", "text": question},
+            ],
+        }
+    ]
+
+    # Preparation for inference
+    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    image_inputs, video_inputs = process_vision_info(messages)
+    inputs = processor(
+        text=[text],
+        images=image_inputs,
+        videos=video_inputs,
+        padding=True,
+        return_tensors="pt",
+    )
+
+    print("Question:")
+    print(question)
+    print("Answer:")
+    generated_ids = ov_model.generate(**inputs, max_new_tokens=60)
+    generated_ids_trimmed = [
+    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+    ]
+    output_text = processor.batch_decode(
+        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+    )
+    # print(output_text)
+    
+    # 返回收集到的完整文本
+    return output_text[0]
 
 
 if __name__ == "__main__":
@@ -628,8 +704,8 @@ if __name__ == "__main__":
     #print(capture_screen())
 
     # 9.测试获取系统信息函数
-    print(get_system_info()["message"])
-    vo.TTS_play_audio_stream(get_system_info()["message"])
+    # print(get_system_info()["message"])
+    # vo.TTS_play_audio_stream(get_system_info()["message"])
     # 10.测试控制摄像头开关并拍照
     # print(control_camera(True))   # 打开摄像头并拍照
 
@@ -640,8 +716,12 @@ if __name__ == "__main__":
     #print(get_brightness())
 
     # 13.
-    #camera_to_vLLM(True)
-
+    #vLLM_init()
+    # for i in range(2):
+    #     camera_to_vLLM(True)
+    
+    a = camera_to_vLLM(False)
+    print(a)
 
 
 

@@ -33,7 +33,7 @@ def vLLM_init():
 
 
 
-def generate_answer(question:str,image:Image.Image):
+def generate_answer(question:str,example_image_path:Path):
     messages = [
         {
             "role": "user",
@@ -61,33 +61,6 @@ def generate_answer(question:str,image:Image.Image):
     print("Question:")
     print(question)
     print("Answer:")
-
-    # 添加一个列表来收集生成的文本
-    generated_text = []
-    
-    class PerformanceStreamer(TextStreamer):
-        def __init__(self, tokenizer, skip_special_tokens=True):
-            super().__init__(tokenizer, skip_special_tokens=skip_special_tokens)
-            self.token_count = 0
-            
-        def put(self, value):
-            global first_token_time, total_tokens
-            if self.token_count == 1:
-                first_token_time = time.time() - start_time
-            self.token_count += 1
-            total_tokens += 1
-            # 将 tensor 解码为实际文本
-            if isinstance(value, torch.Tensor):
-                # 确保 tensor 是一维的，并转换为列表
-                if value.dim() > 1:
-                    value = value.squeeze()
-                decoded_text = self.tokenizer.decode(value.tolist(), skip_special_tokens=True)
-            else:
-                decoded_text = value
-            generated_text.append(decoded_text)
-            super().put(value)
-
-    streamer = PerformanceStreamer(processor.tokenizer, skip_special_tokens=True)
     generated_ids = ov_model.generate(**inputs, max_new_tokens=60)
     generated_ids_trimmed = [
     out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
@@ -114,11 +87,10 @@ if __name__ == "__main__":
 
 
     example_image_path = Path("demo.jpeg")
-    image = Image.open(example_image_path)
     question = "描述一下图片内容，如果有人物，单独描述人物的表情和外貌特征，不要描述背景。"
 
 
-    result = generate_answer(question,image)
+    result = generate_answer(question,example_image_path)
     print("生成的回答:", result)
 
     end_time = time.time()

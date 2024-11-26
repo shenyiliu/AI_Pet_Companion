@@ -27,7 +27,9 @@ torch.hub.set_dir(torch_hub_dir)
 nltk.data.path.append(os.path.join(download_dir, "nltk_data"))
 
 from melo.api import TTS
-from open_voice_v2.utils import OVOpenVoiceTTS, OVOpenVoiceConverter, core, enable_english_lang
+from open_voice_v2.utils import (
+    OVOpenVoiceTTS, OVOpenVoiceConverter, core, enable_english_lang, OVOpenVoiceBert
+)
 from openvoice.api import ToneColorConverter, OpenVoiceBaseClass
 
 # core = ov.Core()
@@ -76,8 +78,10 @@ tone_color_converter.load_ckpt(
 )
 
 
-EN_TTS_IR = os.path.join(output_ov_path, "openvoice_en_tts.xml")
 ZH_TTS_IR = os.path.join(output_ov_path, "openvoice_zh_tts.xml")
+ZH_TTS_BERT_IR = os.path.join(output_ov_path, "openvoice_bert_zh_tts.xml")
+EN_TTS_IR = os.path.join(output_ov_path, "openvoice_en_tts.xml")
+EN_TTS_BERT_IR = os.path.join(output_ov_path, "openvoice_bert_en_tts.xml")
 VOICE_CONVERTER_IR = os.path.join(output_ov_path, "openvoice_tone_conversion.xml")
 
 paths = [ZH_TTS_IR, VOICE_CONVERTER_IR]
@@ -101,3 +105,21 @@ for model, path in zip(models, paths):
 
 ov_zh_tts, ov_voice_conversion = ov_models[:2]
 ov_en_tts = ov_models[-1]
+
+# convert openvoice bert to openvino
+if not os.path.exists(ZH_TTS_BERT_IR):
+    from open_voice_v2.utils import zh_mix_en_bert_model, zh_mix_en_tokenizer
+    zh_bert_model = OVOpenVoiceBert(zh_mix_en_bert_model, zh_mix_en_tokenizer, "ZH")
+    zh_ov_model = ov.convert_model(
+        zh_bert_model,
+        example_input=zh_bert_model.get_example_input()
+    )
+    ov.save_model(zh_ov_model,ZH_TTS_BERT_IR)
+if not os.path.exists(EN_TTS_BERT_IR) and enable_english_lang:
+    from open_voice_v2.utils import en_bert_model, en_bert_tokenizer
+    en_bert_model = OVOpenVoiceBert(en_bert_model, en_bert_tokenizer)
+    en_ov_model = ov.convert_model(
+        en_bert_model,
+        example_input=en_bert_model.get_example_input()
+    )
+    ov.save_model(en_ov_model, EN_TTS_BERT_IR)

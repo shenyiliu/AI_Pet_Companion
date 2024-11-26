@@ -1,3 +1,5 @@
+from typing import Optional, Union, Tuple
+
 import torch
 import os
 import re
@@ -7,7 +9,7 @@ from os import PathLike
 import numpy as np
 import urllib.parse
 from pathlib import Path
-from transformers import AutoTokenizer, AutoModelForMaskedLM
+from transformers import AutoTokenizer, AutoModelForMaskedLM, BertForMaskedLM
 import torch.nn as nn
 import openvino as ov
 from tqdm import tqdm
@@ -15,10 +17,13 @@ import soundfile
 from melo.download_utils import load_or_download_config # load_or_download_model
 # from melo.models import SynthesizerTrn
 from melo.split_utils import split_sentence
+from transformers.modeling_outputs import MaskedLMOutput
 
 now_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(now_dir)
 download_dir = os.path.join(project_dir, "download")
+output_dir = os.path.join(project_dir, "output")
+output_ov_path = os.path.join(output_dir, "OpenVoice_v2_ov")
 repo_dir = os.path.join(project_dir, "OpenVoice")
 sys.path.append(repo_dir)
 from openvoice.api import BaseSpeakerTTS, ToneColorConverter, OpenVoiceBaseClass
@@ -30,33 +35,74 @@ from melo import commons
 
 # 开启单独的英语tts（正常可以不开，因为中文tts也支持一部分英语）
 enable_english_lang = False
-
-zh_mix_en_bert_dir = os.path.join(download_dir, "bert-base-multilingual-uncased")
-zh_mix_en_bert_model = AutoModelForMaskedLM.from_pretrained(zh_mix_en_bert_dir)
-zh_mix_en_tokenizer = AutoTokenizer.from_pretrained(zh_mix_en_bert_dir)
-if enable_english_lang:
-    en_bert_dir = os.path.join(download_dir, "bert-base-uncased")
-    en_bert_model = AutoModelForMaskedLM.from_pretrained(en_bert_dir)
-    en_bert_tokenizer = AutoTokenizer.from_pretrained(en_bert_dir)
+zh_bert_use_ov = False
+en_bert_use_ov = False
 core = ov.Core()
 
 
-def get_bert_feature(model, tokenizer, text, word2ph, device="cpu"):
-    if (
-        sys.platform == "darwin"
-        and torch.backends.mps.is_available()
-        and device == "cpu"
-    ):
-        device = "mps"
-    if not device:
-        device = "cuda"
+zh_ov_bert_path = os.path.join(output_ov_path, "openvoice_bert_zh_tts.xml")
+en_ov_bert_path = os.path.join(output_ov_path, "openvoice_bert_en_tts.xml")
+zh_mix_en_bert_dir = os.path.join(download_dir, "bert-base-multilingual-uncased")
 
-    with torch.no_grad():
-        inputs = tokenizer(text, return_tensors="pt")
-        for i in inputs:
-            inputs[i] = inputs[i].to(device)
-        res = model(**inputs, output_hidden_states=True)
-        res = torch.cat(res["hidden_states"][-3:-2], -1)[0].cpu()
+
+class NewBertModel(BertForMaskedLM):
+    def forward(
+        self,
+        input_ids: Optional[torch.Tensor] = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        token_type_ids: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.Tensor] = None,
+        head_mask: Optional[torch.Tensor] = None,
+        inputs_embeds: Optional[torch.Tensor] = None,
+        encoder_hidden_states: Optional[torch.Tensor] = None,
+        encoder_attention_mask: Optional[torch.Tensor] = None,
+        labels: Optional[torch.Tensor] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = True,
+        return_dict: Optional[bool] = None,
+    ) -> Union[Tuple[torch.Tensor], MaskedLMOutput]:
+        outputs = super().forward(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            output_hidden_states=output_hidden_states
+        )
+        return outputs["hidden_states"]
+
+
+if os.path.exists(zh_ov_bert_path):
+    zh_ov_model = core.read_model(zh_ov_bert_path)
+    zh_mix_en_bert_model = ov.compile_model(zh_ov_model, device_name="AUTO")
+    zh_bert_use_ov = True
+else:
+    zh_mix_en_bert_model = NewBertModel.from_pretrained(zh_mix_en_bert_dir)
+zh_mix_en_tokenizer = AutoTokenizer.from_pretrained(zh_mix_en_bert_dir)
+if enable_english_lang:
+    en_bert_dir = os.path.join(download_dir, "bert-base-uncased")
+    if os.path.exists(en_ov_bert_path):
+        en_ov_model = core.read_model(en_ov_bert_path)
+        en_bert_model = ov.compile_model(en_ov_model, device_name="AUTO")
+        en_bert_use_ov = True
+    else:
+        en_bert_model = NewBertModel.from_pretrained(en_bert_dir)
+    en_bert_tokenizer = AutoTokenizer.from_pretrained(en_bert_dir)
+
+
+def get_bert_feature(model, tokenizer, text, word2ph, use_ov):
+    inputs = tokenizer(text, return_tensors="pt")
+    if not use_ov:
+        with torch.no_grad():
+            # hidden_states = model(**inputs, output_hidden_states=True)
+            hidden_states = model(**inputs)
+            res = torch.cat(hidden_states[-3:-2], -1)[0].cpu()
+    else:
+        ov_outputs = model((
+            inputs["input_ids"],
+            inputs["attention_mask"],
+            inputs["token_type_ids"]
+        ))
+        res = torch.tensor(ov_outputs[-3])[0]
+
     # import pdb; pdb.set_trace()
     # assert len(word2ph) == len(text) + 2
     word2phone = word2ph
@@ -89,13 +135,15 @@ def get_text_for_tts_infer(text, language_str, hps, device, symbol_to_id=None):
         if language_str == "ZH_MIX_EN":
             model = zh_mix_en_bert_model
             tokenizer = zh_mix_en_tokenizer
+            use_ov = zh_bert_use_ov
         elif language_str == "EN" and enable_english_lang:
             model = en_bert_model
             tokenizer = en_bert_tokenizer
+            use_ov = en_bert_use_ov
         else:
             raise  Exception(language_str + "not supported")
         # bert = get_bert(norm_text, word2ph, language_str, device)
-        bert = get_bert_feature(model, tokenizer, text, word2ph, device)
+        bert = get_bert_feature(model, tokenizer, text, word2ph, use_ov)
         et = time.time()
         print("[INFO] tts bert duration: ", et - st)
         del word2ph
@@ -230,6 +278,33 @@ class OVOpenVoiceConverter(OVOpenVoiceBase):
 
     def forward(self, y, y_lengths, sid_src, sid_tgt, tau):
         return self.voice_model.model.voice_conversion(y, y_lengths, sid_src, sid_tgt, tau)
+
+
+class OVOpenVoiceBert(nn.Module):
+
+    def __init__(self, bert_model, tokenizer, language: str):
+        super().__init__()
+        self.bert_model = bert_model
+        self.tokenizer = tokenizer
+        self.language = language
+
+
+    def get_example_input(self):
+        if self.language == "ZH" or self.language == "ZH_MIX_EN":
+            example_text = "你好，我叫小明，让我来帮你吧"
+        else:
+            example_text = "Hello, my name is Xiao Ming, let me help you"
+        inputs = self.tokenizer(example_text, return_tensors="pt")
+        # print(inputs.keys())
+        input_ids = inputs["input_ids"]
+        attention_mask = inputs["attention_mask"]
+        token_type_ids = inputs["token_type_ids"]
+        return (input_ids, attention_mask, token_type_ids)
+
+    def forward(self, input_ids, attention_mask, token_type_ids):
+        return self.bert_model(
+            input_ids, attention_mask, token_type_ids
+        )
 
 
 def download_file(
@@ -424,3 +499,8 @@ class OpenVinoTTS(nn.Module):
                                 format=format)
             else:
                 soundfile.write(output_path, audio, self.hps.data.sampling_rate)
+
+
+if __name__ == "__main__":
+    ov_bert = OVOpenVoiceBert(zh_mix_en_bert_model, zh_mix_en_tokenizer, "ZH")
+    ov_bert.get_example_input()

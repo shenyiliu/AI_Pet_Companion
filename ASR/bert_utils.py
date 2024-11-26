@@ -202,7 +202,7 @@ def BERT_tool_call(current_transcription: str):
         except Exception as e:
             print(f"没有函数名称直接输出响应结果")
             tool_message = result['data'][0]['message']
-            return tool_message
+            return None
 
 # 使用示例
 if __name__ == "__main__":

@@ -60,7 +60,45 @@
 ## 部署工作
 ### 第一步：部署LLM
 - 数据生成以及模型lora微调过程 + 模型权重合并过程：[点击跳转](./notebook/train_llm_with_lora/)
-- 将合并后的权重放置到xxxx
+- 将合并后的权重放置到 output/Qwen2.5-7B-Instruct-Lora-Merge
+#### 1.安装ipex-ollama
+- 参考[ipex-ollama安装包](https://www.123684.com/s/iPX7Td-LEfrh?提取码:YLSU)，链接中有转换好的微调后的GGUF模型文件
+- 双击ipex-llm-ollama-Installer-20241118.exe安装
+#### 2.将微调后的模型转换为GGUF (可选)
+##### 环境配置
+```python
+
+conda create -n llm-cpp python=3.11
+conda activate llm-cpp
+pip install --pre --upgrade ipex-llm[cpp]
+
+mkdir llama-cpp
+cd llama-cpp
+
+# 管理员权限执行cmd
+init-llama-cpp.bat
+```
+##### 2.1转换模型为GGUF格式
+这里的模型路径可以根据你实际的模型存储路径来修改，一般会将所有模型存放在根目录下的output文件夹下
+``` python
+python convert_hf_to_gguf.py output/Qwen2.5-7B-Instruct-Lora-Merge --outfile output/qwen2.5_lora.gguf
+```
+##### 2.2模型量化
+``` cmd
+llama-quantize.exe output/qwen2.5_lora.gguf  output/qwen2.5_lora_Q4_K_M.GGUF Q4_K_M
+```
+
+##### 2.3测试模型
+在命令行中运行
+``` cmd
+set SYCL_CACHE_PERSISTENT=1
+set SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1
+
+llama-cli.exe -m qwen2.5_lora_Q4-K-M.gguf -p "Please be aware that your codename in this  conversation is ‘胡桃'  ‘Hutao’,别人称呼你‘胡桃’‘堂主’‘往生堂堂主’上文给定了一些游戏中的经典桥段。作为胡桃/`Hutao`，你需要扮演一个心理咨询师，帮助对方解决问题。如果我问的问题和游戏中的台词高度重复，那你就配合我进行演出。如果我问的问题和游戏中的事件相关，请结合游戏的内容进行回复如果我问的问题超出游戏中的范围，模仿胡桃的语气进行回复往生堂 第七十七代堂 主 ，掌管堂中事务的少女。身居堂主之位，却没有半分架子。她的鬼点子，比瑶光滩上的海砂都多。对胡桃的评价：「难以捉摸的奇妙人物，切莫小看了她。不过，你若喜欢惊喜，可一定要见见她。」单看外形似乎只是个古灵精怪的快乐少女，谁能想到她就是的大名鼎鼎的传说级人物——胡桃。既是「往生堂」堂主，也是璃月「著名」诗人，胡桃的每一重身份都堪称奇妙。她总是飞快地出现又消失，犹如闪电与火花并行，甫一现身便点燃一切。平日里，胡桃俨然是个贪玩孩子，一有闲功夫便四处乱逛，被邻里看作甩手掌柜。唯有葬礼上亲自带领仪信队伍走过繁灯落尽的街道时，她才会表现出 凝重、肃穆 的一面。" -ngl 99 -cnv 
+```
+##### 2.4 量化后的GGUF模型添加到ollama中
+
+
 
 ### 第二步：部署bert意图分类器
 - 数据生成过程：[点击跳转](./notebook/gen_data_for_bert)

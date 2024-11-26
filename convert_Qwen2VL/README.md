@@ -13,7 +13,7 @@ pip install -qU "openvino>=2024.4.0" "nncf>=2.13.0"
 
 ## 转换模型
 
-执行convert.py脚本，运行的时候会从huggingface下载模型，如果下载失败，请手动下载模型，并放置在convert_Qwen2VL/Qwen2-VL-2B-Instruct目录下
+执行convert.py脚本，运行的时候会从huggingface下载模型，如果下载失败，请手动下载模型，并放置在download/Qwen2-VL-2B-Instruct目录下
 
 ## 运行测试程序
 

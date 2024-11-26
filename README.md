@@ -102,6 +102,9 @@ llama-cli.exe -m qwen2.5_lora_Q4-K-M.gguf -p "Please be aware that your codename
 - 用cmd进入ipex-ollama的安装路径，运行`ollama create qwen2.5_lora_Q4_K_M -f Modelfile`
 - Modelfile文件在项目路径下，如果运行报错，请检查模型路径是否正确。
 
+##### 2.5 添加向量模型
+- ollama pull nomic-embed-text:latest
+
 ### 第二步：部署bert意图分类器
 - 数据生成过程：[点击跳转](./notebook/gen_data_for_bert)
 - [部署文档](./bert_tools/README.md)

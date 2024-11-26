@@ -59,11 +59,11 @@
 
 ## 部署工作
 ### 第一步：部署LLM
-- 数据生成以及模型lora微调过程 + 模型权重合并过程（待上传）
+- 数据生成以及模型lora微调过程 + 模型权重合并过程：[点击跳转](./notebook/train_llm_with_lora/)
 - 将合并后的权重放置到xxxx
 
 ### 第二步：部署bert意图分类器
-- 数据生成过程（待上传）
+- 数据生成过程：[点击跳转](./notebook/gen_data_for_bert)
 - [部署文档](./bert_tools/README.md)
 
 

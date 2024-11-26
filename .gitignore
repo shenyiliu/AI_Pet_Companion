@@ -25,3 +25,6 @@ bert_tools/pretrain_models
 my_tools/*.log
 download/torch_hub_local/*
 convert_Qwen2VL/Qwen2-VL-2B-Instruct/*
+.ipynb_checkpoints
+*/.ipynb_checkpoints
+*/*/.ipynb_checkpoints

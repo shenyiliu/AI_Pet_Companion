@@ -28,12 +28,16 @@ from melo.text import cleaned_text_to_sequence, get_bert
 from melo.text.cleaner import clean_text
 from melo import commons
 
+# 开启单独的英语tts（正常可以不开，因为中文tts也支持一部分英语）
+enable_english_lang = False
+
 zh_mix_en_bert_dir = os.path.join(download_dir, "bert-base-multilingual-uncased")
-en_bert_dir = os.path.join(download_dir, "bert-base-uncased")
 zh_mix_en_bert_model = AutoModelForMaskedLM.from_pretrained(zh_mix_en_bert_dir)
 zh_mix_en_tokenizer = AutoTokenizer.from_pretrained(zh_mix_en_bert_dir)
-en_bert_model = AutoModelForMaskedLM.from_pretrained(en_bert_dir)
-en_bert_tokenizer = AutoTokenizer.from_pretrained(en_bert_dir)
+if enable_english_lang:
+    en_bert_dir = os.path.join(download_dir, "bert-base-uncased")
+    en_bert_model = AutoModelForMaskedLM.from_pretrained(en_bert_dir)
+    en_bert_tokenizer = AutoTokenizer.from_pretrained(en_bert_dir)
 core = ov.Core()
 
 
@@ -85,7 +89,7 @@ def get_text_for_tts_infer(text, language_str, hps, device, symbol_to_id=None):
         if language_str == "ZH_MIX_EN":
             model = zh_mix_en_bert_model
             tokenizer = zh_mix_en_tokenizer
-        elif language_str == "EN":
+        elif language_str == "EN" and enable_english_lang:
             model = en_bert_model
             tokenizer = en_bert_tokenizer
         else:

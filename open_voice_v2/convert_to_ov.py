@@ -4,7 +4,7 @@ import sys
 import nncf
 import torch
 import nltk
-from pathlib import Path
+# from pathlib import Path
 
 
 
@@ -27,7 +27,7 @@ torch.hub.set_dir(torch_hub_dir)
 nltk.data.path.append(os.path.join(download_dir, "nltk_data"))
 
 from melo.api import TTS
-from open_voice_v2.utils import OVOpenVoiceTTS, OVOpenVoiceConverter, core
+from open_voice_v2.utils import OVOpenVoiceTTS, OVOpenVoiceConverter, core, enable_english_lang
 from openvoice.api import ToneColorConverter, OpenVoiceBaseClass
 
 # core = ov.Core()
@@ -55,13 +55,16 @@ zh_tts_model = TTS(
     config_path=os.path.join(zh_tts_model_dir, "config.json"),
     ckpt_path=os.path.join(zh_tts_model_dir, "checkpoint.pth")
 )
-print("load english speaker")
-en_tts_model = TTS(
-    language="EN_NEWEST",
-    device=pt_device,
-    config_path=os.path.join(en_tts_model_dir, "config.json"),
-    ckpt_path=os.path.join(en_tts_model_dir, "checkpoint.pth")
-)
+if enable_english_lang:
+    print("load english speaker")
+    en_tts_model = TTS(
+        language="EN_NEWEST",
+        device=pt_device,
+        config_path=os.path.join(en_tts_model_dir, "config.json"),
+        ckpt_path=os.path.join(en_tts_model_dir, "checkpoint.pth")
+    )
+else:
+    en_tts_model = None
 
 print("load tone converter")
 tone_color_converter = ToneColorConverter(
@@ -77,12 +80,14 @@ EN_TTS_IR = os.path.join(output_ov_path, "openvoice_en_tts.xml")
 ZH_TTS_IR = os.path.join(output_ov_path, "openvoice_zh_tts.xml")
 VOICE_CONVERTER_IR = os.path.join(output_ov_path, "openvoice_tone_conversion.xml")
 
-paths = [EN_TTS_IR, VOICE_CONVERTER_IR, ZH_TTS_IR]
+paths = [ZH_TTS_IR, VOICE_CONVERTER_IR]
 models = [
-    OVOpenVoiceTTS(en_tts_model),
+    OVOpenVoiceTTS(zh_tts_model),
     OVOpenVoiceConverter(tone_color_converter),
-    OVOpenVoiceTTS(zh_tts_model)
 ]
+if enable_english_lang:
+    paths.append(EN_TTS_IR)
+    models.append(OVOpenVoiceTTS(en_tts_model))
 ov_models = []
 
 for model, path in zip(models, paths):
@@ -94,5 +99,5 @@ for model, path in zip(models, paths):
         ov_model = core.read_model(path)
     ov_models.append(ov_model)
 
-ov_en_tts, ov_voice_conversion = ov_models[:2]
-ov_zh_tts = ov_models[-1]
+ov_zh_tts, ov_voice_conversion = ov_models[:2]
+ov_en_tts = ov_models[-1]

@@ -37,7 +37,7 @@ nltk.data.path.append(os.path.join(download_dir, "nltk_data"))
 # from melo.api import TTS
 from openvoice.api import ToneColorConverter, OpenVoiceBaseClass
 import openvoice.se_extractor as se_extractor
-from open_voice_v2.utils import OpenVinoTTS, core
+from open_voice_v2.utils import OpenVinoTTS, core, enable_english_lang
 
 # core = ov.Core()
 
@@ -60,7 +60,8 @@ ov_device = "AUTO"
 en_source_se_path = os.path.join(source_se_dir, "en-newest.pth")
 zh_source_se_path = os.path.join(source_se_dir, "zh.pth")
 zh_source_se = torch.load(zh_source_se_path, map_location=pt_device)
-en_source_se = torch.load(en_source_se_path, map_location=pt_device)
+if enable_english_lang:
+    en_source_se = torch.load(en_source_se_path, map_location=pt_device)
 
 print("load chinese speaker")
 zh_tts_model = OpenVinoTTS(
@@ -70,14 +71,15 @@ zh_tts_model = OpenVinoTTS(
     ov_device=ov_device,
     config_path=os.path.join(zh_tts_model_dir, "config.json")
 )
-print("load english speaker")
-en_tts_model = OpenVinoTTS(
-    language="EN",
-    ov_xml_path=en_tts_ov_path,
-    pt_device=pt_device,
-    ov_device=ov_device,
-    config_path=os.path.join(en_tts_model_dir, "config.json")
-)
+if enable_english_lang:
+    print("load english speaker")
+    en_tts_model = OpenVinoTTS(
+        language="EN",
+        ov_xml_path=en_tts_ov_path,
+        pt_device=pt_device,
+        ov_device=ov_device,
+        config_path=os.path.join(en_tts_model_dir, "config.json")
+    )
 
 
 print("load tone...")
@@ -165,7 +167,8 @@ def predict(
     prompt: str,
     audio_file_path: str,
     audio_output_dir: str,
-    se_output_dir: str
+    se_output_dir: str,
+    enable_tone_clone: bool,
 ):
     st = time.time()
     supported_languages = ["zh", "en"]
@@ -181,11 +184,18 @@ def predict(
         source_se = zh_source_se
         # language = "Chinese"
         speaker_id = 1
-    else:
+    elif language == "en" and enable_english_lang:
         tts_model = en_tts_model
         source_se = en_source_se
         # language = "English"
         speaker_id = 0
+    else:
+        return {
+            "status": "failed",
+            "file_path": None,
+            "message": f"{language} is not support language"
+        }
+
     if len(prompt) < 2:
         text_hint = "[ERROR] Please give a longer prompt text \n"
         return {
@@ -225,25 +235,33 @@ def predict(
     print("[INFO] TTS duration: ", tts_time - se_time)
     save_path = f"{audio_output_dir}/output.wav"
     # 下面这一行应该是固定的
-    encode_message = "@MyShell"
-    print("[INFO] Begin tone color clone...")
-    # 音色克隆
-    tone_color_converter.convert(
-        audio_src_path=audio_tts_path,
-        src_se=source_se,
-        tgt_se=target_se,
-        output_path=save_path,
-        message=encode_message,
-    )
-    clone_time = time.time()
-    print("[INFO] tone color clone duration: ", clone_time - tts_time)
-    print("[INFO] total duration: ", clone_time - st)
     text_hint = "Get response successfully \n"
-    return {
-        "status": "success",
-        "file_path": save_path,
-        "message": text_hint
-    }
+    if enable_tone_clone:
+        encode_message = "@MyShell"
+        print("[INFO] Begin tone color clone...")
+        # 音色克隆
+        tone_color_converter.convert(
+            audio_src_path=audio_tts_path,
+            src_se=source_se,
+            tgt_se=target_se,
+            output_path=save_path,
+            message=encode_message,
+        )
+        clone_time = time.time()
+        print("[INFO] tone color clone duration: ", clone_time - tts_time)
+        print("[INFO] total duration: ", clone_time - st)
+        return {
+            "status": "success",
+            "file_path": save_path,
+            "message": text_hint
+        }
+    else:
+        return {
+            "status": "success",
+            "file_path": audio_tts_path,
+            "message": text_hint
+        }
+
 
 
 
@@ -288,6 +306,7 @@ class TTSData(BaseModel):
     speaker_id: str = "HuTao"
     language: str = 'zh'
     style: str = "default"
+    enable_tone_clone: bool = True
 
 
 @app.post("/api/tts")
@@ -322,7 +341,8 @@ def api_tts(data: TTSData):
         prompt=data.prompt,
         audio_file_path=speaker_wav_path,
         audio_output_dir=audio_output_dir,
-        se_output_dir=se_output_dir
+        se_output_dir=se_output_dir,
+        enable_tone_clone=data.enable_tone_clone
     )
     # 清除se目录缓存
     delete_folder(se_output_dir)

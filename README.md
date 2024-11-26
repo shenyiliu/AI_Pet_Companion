@@ -62,11 +62,11 @@
 - 数据生成以及模型lora微调过程 + 模型权重合并过程：[点击跳转](./notebook/train_llm_with_lora/)
 - 将合并后的权重放置到 output/Qwen2.5-7B-Instruct-Lora-Merge
 #### 1.安装ipex-ollama
-- 参考[ipex-ollama安装包](https://www.123684.com/s/iPX7Td-LEfrh?提取码:YLSU)，链接中有转换好的微调后的GGUF模型文件
+- 参考[ipex-ollama安装包](https://www.123684.com/s/iPX7Td-LEfrh) 提取码:YLSU，链接中有转换好的微调后的GGUF模型文件
 - 双击ipex-llm-ollama-Installer-20241118.exe安装
 #### 2.将微调后的模型转换为GGUF (可选)
 ##### 环境配置
-```python
+```bash
 
 conda create -n llm-cpp python=3.11
 conda activate llm-cpp
@@ -106,11 +106,7 @@ llama-cli.exe -m qwen2.5_lora_Q4-K-M.gguf -p "Please be aware that your codename
 
 
 ### 第三步：部署ASR(Automatic Speech Recognition 自动语音识别)服务
-4. 模型转换，转原始模型为openvino需要的模型格式。
-    ```bash
-    optimum-cli export openvino --model download/Qwen2.5-7B-Instruct --weight-format int4 --task text-generation-with-past output/ov-qwen2.5-7b-instruct-int4
-    ```
-5. 启动ASR
+1. 启动ASR
     ```bash
     python ASR/Voice.py
     ```

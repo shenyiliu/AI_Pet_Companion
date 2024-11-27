@@ -78,7 +78,7 @@ pip install --pre --upgrade ipex-llm[cpp]
 
 ```
 1.2.2 对于Win10/Win11系统，打开设置，搜索开发者设置，勾选`开发者模式`。不开启则下面运行api会报没有权限创建软链接。[参考链接](https://www.scivision.dev/windows-symbolic-link-permission-enable/)
-![development_mode](../images/development_mode.png)
+![development_mode](./images/development_mode.png)
 1.2.3 运行下面的命令，初始化llama-cpp，初始化后，可以在llama-cpp目录看到很多文件，例如`convert_hf_to_gguf.py`就是其中之一。
 ```bash
 mkdir llama-cpp

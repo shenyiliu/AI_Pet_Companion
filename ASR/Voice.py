@@ -547,10 +547,10 @@ def Mem0_LLM_TTS(current_transcription:str, user_id:str):
     mu.save_interaction_timing(user_id, current_transcription, "")
     
     # 启动TTS处理线程
-    # if tts_thread is None or not tts_thread.is_alive():
-    #     is_tts_running = True
-    #     tts_thread = threading.Thread(target=process_tts_queue)
-    #     tts_thread.start()
+    if tts_thread is None or not tts_thread.is_alive():
+        is_tts_running = True
+        tts_thread = threading.Thread(target=process_tts_queue)
+        tts_thread.start()
     
 
     # 用于临时存储当前正在构建的句子

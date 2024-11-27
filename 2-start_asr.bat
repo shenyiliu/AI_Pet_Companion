@@ -1,3 +1,3 @@
-call activate AI_Pet_Companion
+call activate openvino
 cd ASR
 call python Voice.py

@@ -41,7 +41,7 @@
     git clone https://github.com/shenyiliu/AI_Pet_Companion.git
     cd AI_Pet_Companion
     ```
-5. 去huggingface下载[Qwen2.5-7B-Instruct](https://hf-mirror.com/Qwen/Qwen2.5-7B-Instruct)和[Qwen2-VL-7B-Instruct](https://hf-mirror.com/Qwen/Qwen2-VL-7B-Instruct)模型，放置到本项目的`download`目录。网络不畅的，可以使用hf-mirror.com。
+5. 去huggingface下载[Qwen2.5-7B-Instruct](https://hf-mirror.com/Qwen/Qwen2.5-7B-Instruct)和[Qwen2-VL-2B-Instruct](https://hf-mirror.com/Qwen/Qwen2-VL-2B-Instruct)模型，放置到本项目的`download`目录。网络不畅的，可以使用hf-mirror.com。
 6. 去魔搭下载[SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall)和[speech_fsmn_vad_zh-cn-16k-common-pytorch](https://modelscope.cn/models/iic/speech_fsmn_vad_zh-cn-16k-common-pytorch)，放置到本项目的`download`目录。
 7. 使用anaconda创建并激活一个虚拟环境，比如可以叫`openvino`，可以参考下面的命令。
     ```shell
@@ -158,25 +158,32 @@ ollama pull nomic-embed-text:latest
 - [部署文档](./bert_tools/README.md)
 
 
-### 第三步：部署ASR(Automatic Speech Recognition 自动语音识别)服务
-
-- 创建环境
+### 第三步：转换Qwen2-VL-2B-Instruct为OpenVino格式
+1. 确保`Qwen2-VL-2B-Instruct`已下载到download目录。
+2. 进入`convert_Qwen2VL`目录，运行`convert.py`程序。
 ```bash
-conda create -n AI_Pet_Companion python=3.10 -y
-conda activate AI_Pet_Companion
-pip install -r requirements.txt
+cd convert_Qwen2VL
+python convert.py
 ```
-- cmd运行ASR
+3. 运行`run_demo.py`测试转换后的模型能否正常加载。
+```bash
+python run_demo.py
+```
+
+
+### 第四步：部署ASR(Automatic Speech Recognition 自动语音识别)服务 + 若干系统工具
+
+- 复用之前创建的openvino虚拟环境，cmd运行下面的命令就可以运行了。
 ```bash
 call 2-start_asr.bat
 ```
 
 
-### 第四步：部署TTS(Text To Speech 语音合成)服务
+### 第五步：部署TTS(Text To Speech 语音合成)服务
 - 采用[OpenVoice](https://github.com/myshell-ai/OpenVoice)开源项目的V2版本，使用Intel OpenVino进行推理加速。
 - [部署文档](./open_voice_v2/README.md)
 
-### 第五步：部署卡通人
+### 第六步：部署卡通人
 1. 采用[https://github.com/zenghongtu/PPet?tab=readme-ov-file](https://github.com/zenghongtu/PPet?tab=readme-ov-file)项目
 2. 可以复用第一步创建的openvino环境。
     ```bash

@@ -28,3 +28,4 @@ convert_Qwen2VL/Qwen2-VL-2B-Instruct/*
 .ipynb_checkpoints
 */.ipynb_checkpoints
 */*/.ipynb_checkpoints
+llama-cpp

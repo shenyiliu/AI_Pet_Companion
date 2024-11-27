@@ -60,50 +60,97 @@
 ## 部署工作
 ### 第一步：部署LLM
 - 数据生成以及模型lora微调过程 + 模型权重合并过程：[点击跳转](./notebook/train_llm_with_lora/)
+- 训练好的lora模型权重
+  - 123盘：https://www.123684.com/s/oEqDVv-kfBo? 提取码:iu9D
 - 将合并后的权重放置到 output/Qwen2.5-7B-Instruct-Lora-Merge
-#### 1.安装ipex-ollama
+- [参考教程](https://github.com/intel-analytics/ipex-llm/blob/main/docs/mddocs/Quickstart/llama_cpp_quickstart.zh-CN.md)
+#### 1.1.安装ipex-ollama
 - 参考[ipex-ollama安装包](https://www.123684.com/s/iPX7Td-LEfrh) 提取码:YLSU，链接中有转换好的微调后的GGUF模型文件
-- 双击ipex-llm-ollama-Installer-20241118.exe安装
-#### 2.将微调后的模型转换为GGUF (可选)
+- 双击ipex-llm-ollama-Installer-20241118.exe安装，不建议更改安装路径。
+- 如果已经安装了ollama，建议卸载，否则会冲突（例如端口被占用，环境变量冲突）
+#### 1.2.将微调后的模型转换为GGUF (可选)
 ##### 环境配置
+1.2.1 新建一个虚拟环境，安装ipex-llm
 ```bash
-
 conda create -n llm-cpp python=3.11
 conda activate llm-cpp
 pip install --pre --upgrade ipex-llm[cpp]
 
+```
+1.2.2 对于Win10/Win11系统，打开设置，搜索开发者设置，勾选`开发者模式`。不开启则下面运行api会报没有权限创建软链接。[参考链接](https://www.scivision.dev/windows-symbolic-link-permission-enable/)
+![development_mode](../images/development_mode.png)
+1.2.3 运行下面的命令，初始化llama-cpp，初始化后，可以在llama-cpp目录看到很多文件，例如`convert_hf_to_gguf.py`就是其中之一。
+```bash
 mkdir llama-cpp
 cd llama-cpp
-
-# 管理员权限执行cmd
 init-llama-cpp.bat
 ```
-##### 2.1转换模型为GGUF格式
-这里的模型路径可以根据你实际的模型存储路径来修改，一般会将所有模型存放在根目录下的output文件夹下
-``` python
-python convert_hf_to_gguf.py output/Qwen2.5-7B-Instruct-Lora-Merge --outfile output/qwen2.5_lora.gguf
+1.2.4 将微调前的模型`Qwen2.5-7B-Instruct`里面的几个json复制到微调后的模型文件夹，覆盖过去，否则转gguf会报错。包含下面几个json文件。
+```bash
+config.json
+generation_config.json
+tokenizer_config.json
+tokenizer.json
+vocab.json
 ```
-##### 2.2模型量化
+1.2.5 转换模型为GGUF格式。这里的模型路径可以根据你实际的模型存储路径来修改，一般会将所有模型存放在项目根目录下的`output`文件夹下
+``` bash
+python convert_hf_to_gguf.py ../output/Qwen2.5-7B-Instruct-Lora-Merge --outfile ../output/qwen2.5_lora.gguf
+```
+1.2.6 模型量化
 ``` cmd
-llama-quantize.exe output/qwen2.5_lora.gguf  output/qwen2.5_lora_Q4_K_M.GGUF Q4_K_M
+./llama-quantize.exe ../output/qwen2.5_lora.gguf  ../output/qwen2.5_lora_Q4_K_M.GGUF Q4_K_M
 ```
 
-##### 2.3测试模型
+##### 1.3测试模型
 在命令行中运行
 ``` cmd
 set SYCL_CACHE_PERSISTENT=1
 set SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1
 
-llama-cli.exe -m qwen2.5_lora_Q4-K-M.gguf -p "Please be aware that your codename in this  conversation is ‘胡桃'  ‘Hutao’,别人称呼你‘胡桃’‘堂主’‘往生堂堂主’上文给定了一些游戏中的经典桥段。作为胡桃/`Hutao`，你需要扮演一个心理咨询师，帮助对方解决问题。如果我问的问题和游戏中的台词高度重复，那你就配合我进行演出。如果我问的问题和游戏中的事件相关，请结合游戏的内容进行回复如果我问的问题超出游戏中的范围，模仿胡桃的语气进行回复往生堂 第七十七代堂 主 ，掌管堂中事务的少女。身居堂主之位，却没有半分架子。她的鬼点子，比瑶光滩上的海砂都多。对胡桃的评价：「难以捉摸的奇妙人物，切莫小看了她。不过，你若喜欢惊喜，可一定要见见她。」单看外形似乎只是个古灵精怪的快乐少女，谁能想到她就是的大名鼎鼎的传说级人物——胡桃。既是「往生堂」堂主，也是璃月「著名」诗人，胡桃的每一重身份都堪称奇妙。她总是飞快地出现又消失，犹如闪电与火花并行，甫一现身便点燃一切。平日里，胡桃俨然是个贪玩孩子，一有闲功夫便四处乱逛，被邻里看作甩手掌柜。唯有葬礼上亲自带领仪信队伍走过繁灯落尽的街道时，她才会表现出 凝重、肃穆 的一面。" -ngl 99 -cnv 
+./llama-cli.exe -m ../output/qwen2.5_lora_Q4_K_M.GGUF -p "Please be aware that your codename in this  conversation is ‘胡桃'  ‘Hutao’,别人称呼你‘胡桃’‘堂主’‘往生堂堂主’上文给定了一些游戏中的经典桥段。作为胡桃/`Hutao`，你需要扮演一个心理咨询师，帮助对方解决问题。如果我问的问题和游戏中的台词高度重复，那你就配合我进行演出。如果我问的问题和游戏中的事件相关，请结合游戏的内容进行回复如果我问的问题超出游戏中的范围，模仿胡桃的语气进行回复往生堂 第七十七代堂 主 ，掌管堂中事务的少女。身居堂主之位，却没有半分架子。她的鬼点子，比瑶光滩上的海砂都多。对胡桃的评价：「难以捉摸的奇妙人物，切莫小看了她。不过，你若喜欢惊喜，可一定要见见她。」单看外形似乎只是个古灵精怪的快乐少女，谁能想到她就是的大名鼎鼎的传说级人物——胡桃。既是「往生堂」堂主，也是璃月「著名」诗人，胡桃的每一重身份都堪称奇妙。她总是飞快地出现又消失，犹如闪电与火花并行，甫一现身便点燃一切。平日里，胡桃俨然是个贪玩孩子，一有闲功夫便四处乱逛，被邻里看作甩手掌柜。唯有葬礼上亲自带领仪信队伍走过繁灯落尽的街道时，她才会表现出 凝重、肃穆 的一面。" -ngl 99 -cnv 
 ```
-##### 2.4 量化后的GGUF模型添加到ollama中
-将模型加载到ollama中
-- 需要先启动ipex-ollama服务。
-- 用cmd进入ipex-ollama的安装路径，运行`ollama create qwen2.5_lora_Q4_K_M -f Modelfile`
-- Modelfile文件在项目路径下，如果运行报错，请检查模型路径是否正确。
+##### 1.4 量化后的GGUF模型添加到ollama中
+1.4.1 需要先启动ipex-ollama服务。打开ipex-ollama的安装路径，默认安装在`C:\Users\{你的用户名}\ipex-llm-ollama`，双击启动start.bat。
+1.4.2 打开环境变量设置，将ipex-ollama的路径加到Path环境变量中。此时另开一个终端，测试`ollama --help`，如果输出为下面的信息，则代表ok。(不行你就重启一下电脑生效咯，其实重开一下软件就可以了)
+```bash
+Large language model runner
 
-##### 2.5 添加向量模型
-- ollama pull nomic-embed-text:latest
+Usage:
+  ollama [flags]
+  ollama [command]
+
+Available Commands:
+  serve       Start ollama
+  create      Create a model from a Modelfile
+  show        Show information for a model
+  run         Run a model
+  pull        Pull a model from a registry
+  push        Push a model to a registry
+  list        List models
+  ps          List running models
+  cp          Copy a model
+  rm          Remove a model
+  help        Help about any command
+
+Flags:
+  -h, --help      help for ollama
+  -v, --version   Show version information
+
+Use "ollama [command] --help" for more information about a command.
+```
+1.4.3 导入文件到ollama中。先返回到项目根目录，再执行下面的命令创建一个名为`qwen2.5_lora_Q4_K_M`的模型。
+```bash
+cd ..
+ollama create qwen2.5_lora_Q4_K_M -f Modelfile
+```
+- Modelfile文件在项目根路径下，如果运行报错，请检查模型路径是否正确。
+
+##### 1.5 添加向量模型
+- 拉取镜像（暂时不用启动，等api调用时自动启动）
+```bash
+ollama pull nomic-embed-text:latest
+```
 
 ### 第二步：部署bert意图分类器
 - 数据生成过程：[点击跳转](./notebook/gen_data_for_bert)

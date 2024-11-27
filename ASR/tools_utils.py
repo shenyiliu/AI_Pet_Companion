@@ -30,12 +30,15 @@ from pathlib import Path
 from transformers import AutoProcessor, AutoTokenizer
 from qwen_vl_utils import process_vision_info
 from transformers import TextStreamer
+import Voice as vo
 
 ov_model = None
 processor = None
 tokenizer = None
 # 添加一个全局变量来跟踪摄像头状态
 _camera = None
+# 控制是否开启多模态对话
+vLLM_CHAT = False
 
 now_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(now_dir)
@@ -583,8 +586,24 @@ def get_brightness():
     except Exception as e:
         return Response.failed(f"获取屏幕亮度时出错: {str(e)}")
 
-# 13.调用摄像头拍照，并把照片传给qwenV模型响应
+# 13.控制是否开启多模态对话，的开关
 def camera_to_vLLM(enable: bool):
+    global vLLM_CHAT
+    '''
+    能够获取相机拍照的照片，并传给vllm模型进行响应
+    :param enable: "True" 打开摄像头并拍照, "False" 关闭摄像头
+    :return: 返回多模态模型输出的文本信息
+    '''
+    if enable:
+        vLLM_CHAT = True
+        print("多模态对话开关已打开...")
+        
+    else:
+        vLLM_CHAT = False
+        print("多模态对话开关已关闭...")
+    return vLLM_CHAT
+# 控制多模态对话的逻辑处理
+def vLLM_to_chat(enable: bool):
     '''
     能够获取相机拍照的照片，并传给vllm模型进行响应
     :param enable: "True" 打开摄像头并拍照, "False" 关闭摄像头
@@ -608,8 +627,7 @@ def camera_to_vLLM(enable: bool):
         response = control_camera(enable)
         print("摄像头已关闭")
         return None
-    
-     
+
 
 # 预加载多模态模型
 def vLLM_init():
@@ -716,12 +734,21 @@ if __name__ == "__main__":
     #print(get_brightness())
 
     # 13.
-    #vLLM_init()
+    vLLM_init()
     # for i in range(2):
     #     camera_to_vLLM(True)
-    
-    a = camera_to_vLLM(False)
-    print(a)
+
+    # a = camera_to_vLLM(False)
+    # print(a)
+
+
+    # 测试多模态对话是否正常
+    # 1.启动多模态开关
+    camera_to_vLLM(True)
+    # 2.执行多模态对话
+    current_transcription = "我现在心情好差呀"
+    vo.Mem0_LLM_TTS(current_transcription,"john")
+
 
 
 

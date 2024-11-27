@@ -515,8 +515,6 @@ def process_audio():
     return all_transcriptions
 
 
-
-
 def Mem0_LLM_TTS(current_transcription:str, user_id:str):
     '''
     1.检索上下文
@@ -528,6 +526,17 @@ def Mem0_LLM_TTS(current_transcription:str, user_id:str):
     # 检索上下文
     context = mu.retrieve_context_with_timing(current_transcription, user_id)
 
+
+    # 记录多模态模型的返回值
+    vllm_history = "拍照的照片信息："
+    # 判断是否启动多模态模型
+    print(f"多模态模型开关vLLM_CHAT：{tu.vLLM_CHAT}")
+    if tu.vLLM_CHAT:
+        vllm_history += tu.vLLM_to_chat(True)
+    elif tu.vLLM_CHAT == False:
+        tu.vLLM_to_chat(False)
+
+    current_transcription = vllm_history + current_transcription
     # 保存当前对话信息
     mu.save_interaction_timing(user_id, current_transcription, "")
     
@@ -537,9 +546,9 @@ def Mem0_LLM_TTS(current_transcription:str, user_id:str):
         tts_thread = threading.Thread(target=process_tts_queue)
         tts_thread.start()
     
+
     # 用于临时存储当前正在构建的句子
     current_sentence = ""
-    
     # 收集完整响应
     start_time_generate = time.time()
     

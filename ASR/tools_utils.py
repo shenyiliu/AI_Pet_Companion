@@ -554,7 +554,7 @@ def get_volume():
         interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
         volume = cast(interface, POINTER(IAudioEndpointVolume))
         
-        # 获取当���音量值(范围0.0-1.0)
+        # 获取当音量值(范围0.0-1.0)
         current_volume = volume.GetMasterVolumeLevelScalar()
         
         # 将音量转换为0-100的整数
@@ -588,20 +588,19 @@ def get_brightness():
 
 # 13.控制是否开启多模态对话，的开关
 def camera_to_vLLM(enable: bool):
-    global vLLM_CHAT
     '''
     能够获取相机拍照的照片，并传给vllm模型进行响应
     :param enable: "True" 打开摄像头并拍照, "False" 关闭摄像头
     :return: 返回多模态模型输出的文本信息
     '''
     if enable:
-        vLLM_CHAT = True
-        print("多模态对话开关已打开...")
+        set_vLLM(enable)
+        print(f"多模态对话开关已打开...{get_vLLM()}")
         
     else:
-        vLLM_CHAT = False
-        print("多模态对话开关已关闭...")
-    return vLLM_CHAT
+        set_vLLM(enable)   
+        print(f"多模态对话开关已关闭...{get_vLLM()}")
+    return get_vLLM()
 # 控制多模态对话的逻辑处理
 def vLLM_to_chat(enable: bool):
     '''
@@ -631,64 +630,106 @@ def vLLM_to_chat(enable: bool):
 
 # 预加载多模态模型
 def vLLM_init():
-    global ov_model,processor,tokenizer
-    pt_model_id = "Qwen2-VL-2B-Instruct"
-    now_dir = os.path.dirname(os.path.abspath(__file__))
-    project_dir = os.path.dirname(now_dir)
-    download_dir = os.path.join(project_dir, "download")
-    output_dir = os.path.join(project_dir, "output")
-    pt_model_dir = os.path.join(download_dir, pt_model_id)
-    ov_model_dir = os.path.join(output_dir, "Qwen2-VL-2B-Instruct-ov")
-    ov_model = OVQwen2VLModel(ov_model_dir, device="GPU")
+    global ov_model, processor, tokenizer
+    try:
+        pt_model_id = "Qwen2-VL-2B-Instruct"
+        now_dir = os.path.dirname(os.path.abspath(__file__))
+        project_dir = os.path.dirname(now_dir)
+        download_dir = os.path.join(project_dir, "download")
+        output_dir = os.path.join(project_dir, "output")
+        pt_model_dir = os.path.join(download_dir, pt_model_id)
+        ov_model_dir = os.path.join(output_dir, "Qwen2-VL-2B-Instruct-ov")
+        
+        # 检查模型目录是否存在
+        if not os.path.exists(pt_model_dir):
+            raise FileNotFoundError(f"模型目录不存在: {pt_model_dir}")
+            
+        # 初始化模型
+        ov_model = OVQwen2VLModel(ov_model_dir, device="GPU")
 
-    min_pixels = 256 * 28 * 28
-    max_pixels = 1280 * 28 * 28
-    processor = AutoProcessor.from_pretrained(pt_model_dir, min_pixels=min_pixels, max_pixels=max_pixels)
+        min_pixels = 256 * 28 * 28
+        max_pixels = 1280 * 28 * 28
+        
+        # 初始化 processor
+        processor = AutoProcessor.from_pretrained(pt_model_dir, min_pixels=min_pixels, max_pixels=max_pixels)
+        if processor is None:
+            raise ValueError("processor 初始化失败")
 
-    if processor.chat_template is None:
-        tokenizer = AutoTokenizer.from_pretrained(pt_model_dir)
-        processor.chat_template = tokenizer.chat_template
+        # 初始化 tokenizer
+        if processor.chat_template is None:
+            tokenizer = AutoTokenizer.from_pretrained(pt_model_dir)
+            if tokenizer is None:
+                raise ValueError("tokenizer 初始化失败")
+            processor.chat_template = tokenizer.chat_template
+            
+        return True
+        
+    except Exception as e:
+        print(f"vLLM 初始化失败: {str(e)}")
+        return False
 
-# 模型推理
-def generate_answer(question:str,example_image_path:Path):
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "image": f"file://{example_image_path}",
-                },
-                {"type": "text", "text": question},
-            ],
-        }
-    ]
-
-    # Preparation for inference
-    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    image_inputs, video_inputs = process_vision_info(messages)
-    inputs = processor(
-        text=[text],
-        images=image_inputs,
-        videos=video_inputs,
-        padding=True,
-        return_tensors="pt",
-    )
-
-    print("Question:")
-    print(question)
-    print("Answer:")
-    generated_ids = ov_model.generate(**inputs, max_new_tokens=60)
-    generated_ids_trimmed = [
-    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-    ]
-    output_text = processor.batch_decode(
-        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-    )
-    # print(output_text)
+# 修改 generate_answer 函数，添加检查
+def generate_answer(question:str, example_image_path:Path):
+    global processor, ov_model
     
-    # 返回收集到的完整文本
-    return output_text[0]
+    # 检查必要组件是否已初始化
+    if processor is None or ov_model is None:
+        print("模型组件未正确初始化，重新尝试初始化...")
+        if not vLLM_init():
+            return "模型初始化失败，无法生成回答"
+    
+    try:
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "image": f"file://{example_image_path}",
+                    },
+                    {"type": "text", "text": question},
+                ],
+            }
+        ]
+
+        # Preparation for inference
+        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        image_inputs, video_inputs = process_vision_info(messages)
+        inputs = processor(
+            text=[text],
+            images=image_inputs,
+            videos=video_inputs,
+            padding=True,
+            return_tensors="pt",
+        )
+
+        print("Question:")
+        print(question)
+        print("Answer:")
+        generated_ids = ov_model.generate(**inputs, max_new_tokens=60)
+        generated_ids_trimmed = [
+        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+        ]
+        output_text = processor.batch_decode(
+            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )
+        # print(output_text)
+        
+        # 返回收集到的完整文本
+        return output_text[0]
+
+    except Exception as e:
+        print(f"生成回答时出错: {str(e)}")
+        return f"生成回答时出错: {str(e)}"
+
+# 定义getter和setter函数
+def get_vLLM():
+    global vLLM_CHAT
+    return vLLM_CHAT
+
+def set_vLLM(value):
+    global vLLM_CHAT 
+    vLLM_CHAT = value
 
 
 if __name__ == "__main__":
@@ -734,20 +775,19 @@ if __name__ == "__main__":
     #print(get_brightness())
 
     # 13.
-    vLLM_init()
-    # for i in range(2):
-    #     camera_to_vLLM(True)
+    # 初始化 vLLM 并检查结果
+    if not vLLM_init():
+        print("vLLM 初始化失败，程序退出")
+        sys.exit(1)
+        
+    # 继续执行其他操作
+    # camera_to_vLLM(True)
+    # # 2.执行多模态对话
+    # current_transcription = "你能看到我现在的样子吗？"
+    # vo.Mem0_LLM_TTS(current_transcription,"john")
 
-    # a = camera_to_vLLM(False)
-    # print(a)
-
-
-    # 测试多模态对话是否正常
-    # 1.启动多模态开关
-    camera_to_vLLM(True)
-    # 2.执行多模态对话
-    current_transcription = "我现在心情好差呀"
-    vo.Mem0_LLM_TTS(current_transcription,"john")
+    # current_transcription = "你能帮我心情好点吗？"
+    # vo.Mem0_LLM_TTS(current_transcription,"john")
 
 
 

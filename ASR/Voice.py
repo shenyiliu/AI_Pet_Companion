@@ -193,7 +193,7 @@ def load_audio(file_path, sample_rate=16000):
 # 添加一个函数来检查唤醒词
 def check_wake_word(transcription: str) -> bool:
     """检查文本中是否包含唤醒词，支持模糊匹配"""
-    wake_words = ["胡桃胡桃", "胡桃", "胡套", "护套", "糊桃", "呼桃","胡涛"]
+    wake_words = ["胡桃胡桃", "胡桃", "胡套", "护套", "糊桃", "呼桃","胡涛","胡头","葡萄"]
     transcription = transcription.lower()  # 转换为小写
     print(f"当前识别文本: {transcription}")  # 调试信息
     
@@ -488,6 +488,11 @@ def process_audio():
                                 # 工具调用
                                 result = bu.BERT_tool_call(current_transcription)
                                 print(f"BERT_tool_call工具调用结果: {result}")
+
+                                # 测试
+                                # result = None
+
+                                # 判断是否调用工具
                                 if result is not None:
                                     print("直接进行TTS转录")
                                     TTS_play_audio_stream(result)
@@ -526,14 +531,15 @@ def Mem0_LLM_TTS(current_transcription:str, user_id:str):
     # 检索上下文
     context = mu.retrieve_context_with_timing(current_transcription, user_id)
 
-
     # 记录多模态模型的返回值
-    vllm_history = "拍照的照片信息："
+    vllm_history = "拍照的图片信息："
+    #tu.set_vLLM(True)
     # 判断是否启动多模态模型
-    print(f"多模态模型开关vLLM_CHAT：{tu.vLLM_CHAT}")
-    if tu.vLLM_CHAT:
+    print(f"多模态模型开关vLLM_CHAT：{tu.get_vLLM()}")
+    
+    if tu.get_vLLM():
         vllm_history += tu.vLLM_to_chat(True)
-    elif tu.vLLM_CHAT == False:
+    elif tu.get_vLLM():
         tu.vLLM_to_chat(False)
 
     current_transcription = vllm_history + current_transcription
@@ -541,10 +547,10 @@ def Mem0_LLM_TTS(current_transcription:str, user_id:str):
     mu.save_interaction_timing(user_id, current_transcription, "")
     
     # 启动TTS处理线程
-    if tts_thread is None or not tts_thread.is_alive():
-        is_tts_running = True
-        tts_thread = threading.Thread(target=process_tts_queue)
-        tts_thread.start()
+    # if tts_thread is None or not tts_thread.is_alive():
+    #     is_tts_running = True
+    #     tts_thread = threading.Thread(target=process_tts_queue)
+    #     tts_thread.start()
     
 
     # 用于临时存储当前正在构建的句子

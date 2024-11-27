@@ -112,6 +112,7 @@ set SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1
 ```
 ##### 1.4 量化后的GGUF模型添加到ollama中
 1.4.1 需要先启动ipex-ollama服务。打开ipex-ollama的安装路径，默认安装在`C:\Users\{你的用户名}\ipex-llm-ollama`，双击启动start.bat。
+
 1.4.2 打开环境变量设置，将ipex-ollama的路径加到Path环境变量中。此时另开一个终端，测试`ollama --help`，如果输出为下面的信息，则代表ok。(不行你就重启一下电脑生效咯，其实重开一下软件就可以了)
 ```bash
 Large language model runner

@@ -71,7 +71,7 @@ def generate_answer(question:str,example_image_path:Path):
     # print(output_text)
     
     # 返回收集到的完整文本
-    return output_text[0]
+    return output_text[0], len(generated_ids[0])
 
 # 使用示例:
 if __name__ == "__main__":
@@ -83,14 +83,14 @@ if __name__ == "__main__":
     # 添加性能测量
     start_time = time.time()
     first_token_time = None
-    total_tokens = 0
+    # total_tokens = 0
 
 
     example_image_path = Path("demo.jpeg")
     question = "描述一下图片内容，如果有人物，单独描述人物的表情和外貌特征，不要描述背景。"
 
 
-    result = generate_answer(question,example_image_path)
+    result, total_tokens = generate_answer(question,example_image_path)
     print("生成的回答:", result)
 
     end_time = time.time()

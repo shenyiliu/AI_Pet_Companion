@@ -530,15 +530,15 @@ def Mem0_LLM_TTS(current_transcription:str, user_id:str):
     
     # 检索上下文
     context = mu.retrieve_context_with_timing(current_transcription, user_id)
-
+    print(f"AAAA检索上下文的内容:{context}")
     # 记录多模态模型的返回值
-    vllm_history = "拍照的图片信息："
+    vllm_history = ""
     #tu.set_vLLM(True)
     # 判断是否启动多模态模型
     print(f"多模态模型开关vLLM_CHAT：{tu.get_vLLM()}")
     
     if tu.get_vLLM():
-        vllm_history += tu.vLLM_to_chat(True)
+        vllm_history = f"拍照的图片信息：'{tu.vLLM_to_chat(True)}'\n"
     elif tu.get_vLLM():
         tu.vLLM_to_chat(False)
 
@@ -724,6 +724,6 @@ if __name__ == '__main__':
     # 初始化LLM
     # init_LLM(qwen_ov_model_dir)
     # 预加载多模态模型
-    tu.vLLM_init()
+    #tu.vLLM_init()
 
     uvicorn.run(app, host=args.host, port=args.port, workers=1)

@@ -176,14 +176,14 @@ def generate_response(input: str, context: List[Dict]):
     """使用语言模型生成响应，支持流式输出"""
     text = ''
 
-    # 保存用户对话的信息
-    save_interaction(user_id = "", user_input = input, assistant_response = '')
-
     input_messages = context + [{"role": "user", "content": input}]
     # 非流式输出
     # output = app.invoke({"messages": input_messages}, config)
     # output["messages"][-1].pretty_print()
     print(input_messages)
+
+    # 保存用户对话的信息
+    save_interaction(user_id = "", user_input = input, assistant_response = '')
     # 流式输出
     for chunk, metadata in app.stream(
         {"messages": input_messages},

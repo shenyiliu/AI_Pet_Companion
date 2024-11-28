@@ -8,7 +8,8 @@ export const win = createModel<RootModel>()({
     resizable: window.bridge.isWinResizable(),
     showTool: config.showTool ?? true,
     language: config.language ?? 'zh',
-  } as { resizable: boolean; showTool: boolean; language: 'zh' | 'en' },
+    ttsClone: config.ttsClone ?? false,
+  } as { resizable: boolean; showTool: boolean; language: 'zh' | 'en'; ttsClone: boolean },
   reducers: {
     setResizable: (state, resizable: boolean) => {
       window.bridge.setWinResizable(resizable)
@@ -19,6 +20,9 @@ export const win = createModel<RootModel>()({
     },
     setLanguage: (state, language: 'zh' | 'en') => {
       return { ...state, language }
+    },
+    setTTSClone: (state, ttsClone: boolean) => {
+      return { ...state, ttsClone }
     },
   },
 })

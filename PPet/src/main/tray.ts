@@ -1,4 +1,5 @@
 import { join } from 'path'
+import http from 'http'
 import electron, {
   Tray,
   nativeImage,
@@ -52,6 +53,7 @@ const langs = {
         `无效的model配置文件，该文件为'.json'结尾，会包含${text}等字段`,
     },
     settings: '配置',
+    ttsClone: 'TTS语音克隆',
   },
   en: {
     alwaysOnTop: 'Always On Top',
@@ -87,6 +89,7 @@ const langs = {
         `Invalid model configuration file. The file ends with '.json' and should contain fields such as ${text}`,
     },
     settings: 'Settings',
+    ttsClone: 'TTS Voice Clone',
   },
 }
 
@@ -148,6 +151,52 @@ const initTray = (mainWindow: BrowserWindow) => {
         mainWindow.setIgnoreMouseEvents(checked, { forward: true })
         config.set('ignoreMouseEvents', checked)
       },
+    },
+    {
+      label: cl.ttsClone,
+      type: 'checkbox',
+      checked: config.get('ttsClone'),
+      click: async (item) => {
+        const { checked } = item
+        
+        const postData = JSON.stringify({
+          enable_tone_clone: checked
+        })
+
+        const options = {
+          hostname: '127.0.0.1',
+          port: 8081,
+          path: '/enable_tone_clone/',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData)
+          }
+        }
+
+        const req = http.request(options, (res) => {
+          if (res.statusCode === 200) {
+            config.set('ttsClone', checked)
+            mainWindow.webContents.executeJavaScript(
+              `window.setTTSClone(${checked})`
+            )
+          } else {
+            console.error('TTS克隆设置失败')
+            item.checked = !checked // 恢复复选框状态
+          }
+        })
+
+        req.on('error', (error) => {
+          console.error('TTS克隆请求失败:', error)
+          item.checked = !checked // 恢复复选框状态
+        })
+
+        req.write(postData)
+        req.end()
+      }
+    },
+    {
+      type: 'separator',
     },
     {
       label: cl.settings,

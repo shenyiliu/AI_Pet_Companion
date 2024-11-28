@@ -73,10 +73,11 @@ const Model = () => {
     useState<{ width: number; height: number }>(getCavSize)
 
   useEffect(() => {
-    ;(window as any).setSwitchTool = dispatch.win.setSwitchTool
-    ;(window as any).setLanguage = dispatch.win.setLanguage
-    ;(window as any).nextModel = dispatch.config.nextModel
-    ;(window as any).prevModel = dispatch.config.prevModel
+    (window as any).setSwitchTool = dispatch.win.setSwitchTool
+    (window as any).setLanguage = dispatch.win.setLanguage
+    (window as any).nextModel = dispatch.config.nextModel
+    (window as any).prevModel = dispatch.config.prevModel
+    (window as any).setTTSClone = dispatch.win.setTTSClone
   }, [])
 
   useEffect(() => {
@@ -212,6 +213,8 @@ const handleClick: React.MouseEventHandler<HTMLDivElement> = async (event) => {
 }
 
   const tipJSONs = language === 'en' ? enTips : zhTips
+
+  const { ttsClone } = useSelector((state: RootState) => state.win)
 
   return (
     <Wrapper

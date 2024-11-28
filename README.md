@@ -156,6 +156,10 @@ ollama pull nomic-embed-text:latest
 ### 第二步：部署bert意图分类器
 - 数据生成过程：[点击跳转](./notebook/gen_data_for_bert)
 - [部署文档](./bert_tools/README.md)
+- 部署后快捷启动办法
+```bash
+.\2-start_bert.bat
+```
 
 
 ### 第三步：转换Qwen2-VL-2B-Instruct为OpenVino格式
@@ -175,13 +179,17 @@ python run_demo.py
 
 - 复用之前创建的openvino虚拟环境，cmd运行下面的命令就可以运行了。
 ```bash
-call 2-start_asr.bat
+.\3-start_asr.bat
 ```
 
 
 ### 第五步：部署TTS(Text To Speech 语音合成)服务
 - 采用[OpenVoice](https://github.com/myshell-ai/OpenVoice)开源项目的V2版本，使用Intel OpenVino进行推理加速。
 - [部署文档](./open_voice_v2/README.md)
+- 部署后快捷启动办法
+```bash
+.\4-start_tts.bat
+```
 
 ### 第六步：部署卡通人
 1. 采用[https://github.com/zenghongtu/PPet?tab=readme-ov-file](https://github.com/zenghongtu/PPet?tab=readme-ov-file)项目

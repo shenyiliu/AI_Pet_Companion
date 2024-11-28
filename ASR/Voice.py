@@ -335,9 +335,12 @@ def TTS_stream(context: str):
         tts_playing = False  # 播放结束
         print("TTS播放结束，恢复录音")
 
+
+# 默认不启动TTS克隆
+enable_tone_clone = False
 # TTS openvoice API
 def TTS_play_audio_stream(context: str):
-    global tts_playing
+    global tts_playing,enable_tone_clone
     tts_playing = True  # 开始播放TTS
 
     import requests
@@ -350,7 +353,8 @@ def TTS_play_audio_stream(context: str):
         "prompt": context,
         "speaker_id": "HuTao",
         "language": "zh",
-        "style": "default"
+        "style": "default",
+        "enable_tone_clone":enable_tone_clone
     }
     
     response = requests.post(url, json=data)
@@ -600,6 +604,14 @@ def process_tts_queue():
         except Exception as e:
             print(f"TTS处理错误: {e}")
             continue
+
+@app.post("/enable_tone_clone/")
+def voice_enable_tone_clone(data: Dict = Body(...)):
+    global enable_tone_clone
+    print(f"enable_tone_clone: {data}")
+    enable_tone_clone = data.get("enable_tone_clone", True)
+    return {"status": "success", "enable_tone_clone": enable_tone_clone}
+
 
 # 启动录音
 @app.post("/start_recording/")

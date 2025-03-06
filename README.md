@@ -236,4 +236,5 @@ python run_demo.py
 
 
 ## 项目演示视频
-- 待上传
+- 魔搭社区 https://modelscope.cn/brand/view/AIPetCompanion
+- 演示视频 https://www.bilibili.com/video/BV1pfqHYYEA8/
